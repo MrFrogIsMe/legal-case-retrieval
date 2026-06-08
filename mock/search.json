@@ -1,0 +1,69 @@
+{
+  "query": "我開車不小心擦撞到路邊停的貨車，後照鏡壞了，沒有人受傷",
+  "analysis": {
+    "case_type": "過失毀損 / 可能涉過失傷害",
+    "subjective": "過失",
+    "possible_articles": [
+      { "code": "刑法 354", "name": "毀損罪", "note": "須故意，過失毀損不罰" },
+      { "code": "刑法 284", "name": "過失傷害", "note": "若有人受傷則適用" }
+    ],
+    "criminal_vs_civil": "純財物損壞刑事多不起訴，責任主要落在民事賠償"
+  },
+  "stats": {
+    "total_similar": 218,
+    "verdict_distribution": [
+      { "label": "不受理", "count": 131, "ratio": 0.60 },
+      { "label": "緩刑", "count": 65, "ratio": 0.30 },
+      { "label": "拘役易科罰金", "count": 22, "ratio": 0.10 }
+    ],
+    "compensation_range": { "min": 3000, "median": 8000, "max": 35000, "currency": "TWD" }
+  },
+  "cases": [
+    {
+      "jid": "ILDM,95,交易,34,20060414,1",
+      "title": "過失傷害",
+      "court": "臺灣宜蘭地方法院",
+      "year": 95,
+      "date": "20060414",
+      "date_display": "民國 95 年 4 月 14 日",
+      "facts_summary": "被告駕車行駛中，不慎擦撞前方停放車輛，致車損；告訴人於審理中撤回告訴。",
+      "verdict": "公訴不受理",
+      "sentence": null,
+      "compensation": null,
+      "cited_articles": ["刑法 284", "刑事訴訟法 303"],
+      "similarity": 0.82,
+      "confidence": "high"
+    },
+    {
+      "jid": "SCDM,94,竹交簡,60,20050613,1",
+      "title": "公共危險",
+      "court": "臺灣新竹地方法院",
+      "year": 94,
+      "date": "20050613",
+      "date_display": "民國 94 年 6 月 13 日",
+      "facts_summary": "被告駕車與他車發生碰撞致財物損壞，雙方就賠償達成和解。",
+      "verdict": "緩刑",
+      "sentence": "拘役 30 日，緩刑 2 年",
+      "compensation": 12000,
+      "cited_articles": ["刑法 185-4"],
+      "similarity": 0.74,
+      "confidence": "medium"
+    },
+    {
+      "jid": "SLDM,108,交訴,5,20190606,1",
+      "title": "公共危險等",
+      "court": "臺灣士林地方法院",
+      "year": 108,
+      "date": "20190606",
+      "date_display": "民國 108 年 6 月 6 日",
+      "facts_summary": "被告肇事後未停留即離去，後經和解。",
+      "verdict": "有罪",
+      "sentence": "有期徒刑 6 月，得易科罰金",
+      "compensation": 30000,
+      "cited_articles": ["刑法 185-4", "刑法 284"],
+      "similarity": 0.69,
+      "confidence": "high"
+    }
+  ],
+  "disclaimer": "本系統為類案檢索工具，非法律建議。所列案例為刑事判決，您描述的情況若無人受傷，刑事上通常不會起訴；過去案例不代表您的案件結果。"
+}

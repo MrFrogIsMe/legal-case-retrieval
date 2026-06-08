@@ -1,0 +1,13 @@
+{
+  "session_id": "abc123",
+  "ready_to_search": false,
+  "next_question": "了解。請問這次事故有人受傷嗎？",
+  "reason": "是否有人受傷會決定刑事責任類型（過失傷害 vs 純財損）",
+  "collected": {
+    "incident_type": "車輛碰撞",
+    "damage": "財物（後照鏡）",
+    "injury": null,
+    "hit_and_run": null,
+    "fault": "過失"
+  }
+}

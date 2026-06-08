@@ -27,6 +27,10 @@
   - 實驗階段 3-4 週規劃（資料管線 / 檢索實驗 / 抽取可信度 / 評估報告）
   - 工程與部署（路線 B：FastAPI + docker-compose + nginx + GitHub Actions CI/CD + Test）
 
+- `docs/api_v1.md` — API 規格（前後端契約）。6 個端點完整 request/response schema、
+  錯誤格式、前端 mock 開發指引。前端依此可先行開發。
+  - 對應 mock 資料在 `mock/`（見 `mock/README.md`）
+
 ## 資料
 
 - 來源：司法院開放資料（opendata.judicial.gov.tw）

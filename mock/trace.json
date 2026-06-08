@@ -1,0 +1,9 @@
+{
+  "trace": [
+    { "step": 1, "name": "理解事由", "detail": "財物損壞、過失、無人受傷" },
+    { "step": 2, "name": "推斷法條", "detail": "刑法 354 毀損(須故意，過失不罰)；若受傷則 284" },
+    { "step": 3, "name": "檢索策略", "detail": "改查過失傷害/公共危險相鄰案件，BM25 比對法條號" },
+    { "step": 4, "name": "混合檢索", "detail": "Dense(BGE-M3) + BM25 → RRF(k=60) → top-20" },
+    { "step": 5, "name": "重排", "detail": "bge-reranker-v2-m3 → top-5" }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "jid": "ILDM,95,交易,34,20060414,1",
+  "title": "過失傷害",
+  "court": "臺灣宜蘭地方法院",
+  "date_display": "民國 95 年 4 月 14 日",
+  "segments": {
+    "main": "本件公訴不受理。",
+    "facts": "被告丙○○於民國 95 年間駕車行駛，不慎擦撞前方停放之車輛，致告訴人車輛受損...",
+    "reasoning": "按告訴乃論之罪，告訴人於第一審辯論終結前，得撤回其告訴；又告訴經撤回者，應諭知不受理之判決。茲據告訴人甲○○、乙○○於本院訊問時均撤回告訴，此有訊問筆錄在卷可參，爰不經言詞辯論，逕為諭知不受理之判決。"
+  },
+  "extracted": {
+    "facts_summary": "被告駕車不慎擦撞停放車輛致車損；告訴人於審理中撤回告訴。",
+    "verdict": "公訴不受理",
+    "sentence": null,
+    "compensation": null,
+    "cited_articles": ["刑法 284", "刑事訴訟法 303"],
+    "key_factors": ["告訴乃論", "撤回告訴"]
+  },
+  "citations": [
+    {
+      "claim": "本案以公訴不受理收場",
+      "source_segment": "reasoning",
+      "source_text": "茲據告訴人甲○○、乙○○於本院訊問時均撤回告訴...逕為諭知不受理之判決。",
+      "article": "刑事訴訟法 303",
+      "verified": true
+    },
+    {
+      "claim": "本案屬告訴乃論之罪",
+      "source_segment": "reasoning",
+      "source_text": "按告訴乃論之罪，告訴人於第一審辯論終結前，得撤回其告訴。",
+      "article": "刑法 287",
+      "verified": false
+    }
+  ],
+  "comparison": [
+    { "aspect": "主觀要素", "user": "過失", "case": "過失", "match": true },
+    { "aspect": "損害類型", "user": "財損", "case": "財損+受傷", "match": false },
+    { "aspect": "肇事逃逸", "user": "無", "case": "無", "match": true }
+  ],
+  "confidence": {
+    "verdict": "high",
+    "compensation": "low",
+    "overall": "medium"
+  }
+}

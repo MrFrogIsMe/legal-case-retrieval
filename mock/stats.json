@@ -1,0 +1,16 @@
+{
+  "case_type": "過失傷害",
+  "total": 4821,
+  "verdict_distribution": [
+    { "label": "不受理", "count": 2892, "ratio": 0.60 },
+    { "label": "緩刑", "count": 1446, "ratio": 0.30 },
+    { "label": "拘役易科罰金", "count": 483, "ratio": 0.10 }
+  ],
+  "compensation_range": { "min": 3000, "median": 8000, "max": 120000, "currency": "TWD" },
+  "by_year": [
+    { "year": 94, "count": 312 },
+    { "year": 95, "count": 358 },
+    { "year": 96, "count": 401 },
+    { "year": 97, "count": 433 }
+  ]
+}
