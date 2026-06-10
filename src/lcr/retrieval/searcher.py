@@ -55,10 +55,11 @@ class Searcher:
             self._collection = self._chroma_client.get_collection(self.collection_name)
         return self._collection
 
-    def _load_bm25(self) -> tuple[bm25s.BM25, list[str]]:
+    def _load_bm25(self) -> "tuple[bm25s.BM25, list[str]]":
         import bm25s
         if self._bm25 is None:
-            self._bm25 = bm25s.BM25.load(str(self.bm25_dir), load_corpus=True)
+            # load_corpus=False：不需要 corpus，只需要 index 做 score 計算
+            self._bm25 = bm25s.BM25.load(str(self.bm25_dir), load_corpus=False)
             with (self.bm25_dir / "ids.json").open(encoding="utf-8") as f:
                 self._bm25_ids = json.load(f)
         return self._bm25, self._bm25_ids  # type: ignore[return-value]
@@ -104,6 +105,7 @@ class Searcher:
 
         output: list[tuple[str, float]] = []
         for idx, score in zip(results[0], scores[0]):
+            # load_corpus=False 時，results 是 doc index（整數）
             jid = bm25_ids[int(idx)]
             output.append((jid, float(score)))
         return output
