@@ -120,8 +120,9 @@ def main() -> int:
         return 1
 
     # --- 查詢既有 batch ---
+    # 只有當沒有指定 --n（即非測試模式）時，才自動讀取已有的 batch_id.txt
     batch_id = args.batch_id
-    if not batch_id and batch_id_path.exists():
+    if not batch_id and not args.n and batch_id_path.exists():
         batch_id = batch_id_path.read_text().strip()
         print(f"讀取已有 batch_id：{batch_id}")
 
