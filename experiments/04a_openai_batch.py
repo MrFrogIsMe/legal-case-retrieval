@@ -148,7 +148,6 @@ def main() -> int:
     )
 
     MAX_BATCH_SIZE_MB = 150  # OpenAI 上限 200MB，保守設 150MB
-    CHUNK_SIZE = 10000        # 先以 10k 筆為一個 chunk 估算
 
     print(f"建立 batch 請求檔 → {batch_requests_path}")
     count = create_batch_file(records, batch_requests_path)
@@ -188,7 +187,7 @@ def main() -> int:
         for bid in batch_ids:
             print(f"  {bid}")
         print("可用以下指令個別查詢進度：")
-        print(f"  uv run python experiments/04a_openai_batch.py --batch-id <batch_id>")
+        print("  uv run python experiments/04a_openai_batch.py --batch-id <batch_id>")
     else:
         batch_id = submit_batch(batch_requests_path)
         batch_id_path.write_text(batch_id)
