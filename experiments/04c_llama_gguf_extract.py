@@ -13,7 +13,6 @@ from __future__ import annotations
 import argparse
 import json
 import random
-import re
 import sys
 from pathlib import Path
 
@@ -21,7 +20,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 GGUF_PATH = "/home/mrfrog/models/Llama-3.2-Taiwan-Legal-3B-Instruct.Q4_K_M.gguf"
 
-SYSTEM_PROMPT = "你是台灣法律判決書分析助理。請從判決書中抽取結構化要素，只輸出 JSON，不要其他說明。"
+SYSTEM_PROMPT = (
+    "你是台灣法律判決書分析助理。請從判決書中抽取結構化要素，只輸出 JSON，不要其他說明。"
+)
 
 USER_TEMPLATE = """判決書：
 
