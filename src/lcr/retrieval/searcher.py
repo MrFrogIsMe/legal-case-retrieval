@@ -55,7 +55,7 @@ class Searcher:
             self._collection = self._chroma_client.get_collection(self.collection_name)
         return self._collection
 
-    def _load_bm25(self) -> "tuple[bm25s.BM25, list[str]]":
+    def _load_bm25(self) -> tuple[bm25s.BM25, list[str]]:
         import bm25s
         if self._bm25 is None:
             # load_corpus=False：不需要 corpus，只需要 index 做 score 計算
