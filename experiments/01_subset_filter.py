@@ -63,11 +63,9 @@ def main() -> int:
     with out_path.open("w", encoding="utf-8") as out:
         for path, court_name in iter_criminal_files(dataset_root):
             total += 1
-            try:
-                with path.open(encoding="utf-8") as fp:
-                    d = json.load(fp)
-            except (json.JSONDecodeError, OSError, UnicodeDecodeError):
-                continue
+            # json.load 需關閉 strict，否則判決全文常有控制字元未跳脫
+            with path.open(encoding="utf-8") as fp:
+                d = json.loads(fp.read(), strict=False)
 
             title = d.get("JTITLE", "")
             jcase = d.get("JCASE", "")

@@ -31,6 +31,12 @@
   錯誤格式、前端 mock 開發指引。前端依此可先行開發。
   - 對應 mock 資料在 `mock/`（見 `mock/README.md`）
 
+- `docs/data_design_v1.md` — 資料設計。子集篩選策略與排除規則完整記錄。
+  - 時間篩選（民國 100 年後）
+  - 第一刀：程序性案件排除規則（刑事 + 民事，含 JCASE/案由清單）
+  - 第二刀：分層抽樣（200 筆/案由，保留多樣性）
+  - 不納入說明（行政、懲戒、最高法院、99 年前）
+
 ## 資料
 
 - 來源：司法院開放資料（opendata.judicial.gov.tw）
@@ -66,10 +72,12 @@ docs/               設計文件
 
 ```bash
 LCR_DATASET_ROOT=/home/mrfrog/code/lawundry_test/Dataset \
-  uv run python experiments/01_subset_filter.py
+LCR_PROCESSED_DIR=/home/mrfrog/data/processed \
+  uv run python experiments/03_build_corpus.py
 ```
 
-本機跑測試與 lint：`uv run pytest`、`uv run ruff check .`
+注意：務必用絕對路徑覆寫 LCR_DATASET_ROOT 和 LCR_PROCESSED_DIR，
+避免從不同 cwd 啟動時輸出到錯誤位置。
 
 ## 文件慣例
 

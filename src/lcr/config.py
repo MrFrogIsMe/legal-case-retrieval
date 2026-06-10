@@ -23,9 +23,10 @@ class Settings(BaseSettings):
 
     # --- 資料路徑 ---
     # 原始判決資料根目錄。本機開發可指向同步下來的副本或 sshfs 掛載點。
-    # 預設為 repo 內 data/raw，實際路徑透過 LCR_DATASET_ROOT 覆寫。
+    # 透過 LCR_DATASET_ROOT 覆寫（務必用絕對路徑）。
     dataset_root: Path = Path("data/raw")
-    # 處理後產物（篩選、切段、抽取結果）
+    # 處理後產物（篩選、切段、抽取結果）；建議設為絕對路徑。
+    # 透過 LCR_PROCESSED_DIR 覆寫。
     processed_dir: Path = Path("data/processed")
 
     # --- 子集篩選參數 ---
