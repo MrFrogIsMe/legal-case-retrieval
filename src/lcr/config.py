@@ -29,7 +29,16 @@ class Settings(BaseSettings):
     # 透過 LCR_PROCESSED_DIR 覆寫。
     processed_dir: Path = Path("data/processed")
 
-    # --- 子集篩選參數 ---
+    # --- LLM 設定 ---
+    # 讀取 LCR_OPENAI_API_KEY（.env 設定），或直接設 OPENAI_API_KEY 搭配 alias
+    openai_api_key: str = ""
+    openai_model: str = "gpt-5-mini"
+    openai_batch_model: str = "gpt-5-mini"
+
+    # 本地 Llama（home_wsl）
+    llama_model_id: str = "lianghsun/Llama-3.2-Taiwan-Legal-3B-Instruct"
+
+    # --- 子集篩選參數（舊版，保留相容性）---
     # 目標案由關鍵字（出現在 JTITLE 即視為候選）
     target_title_keywords: tuple[str, ...] = (
         "過失傷害",

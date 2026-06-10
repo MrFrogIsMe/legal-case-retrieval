@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "法律判決類案搜尋系統 — 從口語事由檢索台灣刑事判決相似案例 (Legal Case Retrieval, RAG)"
 requires-python = ">=3.12"
 dependencies = [
+    "openai>=2.41.0",
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
 ]
