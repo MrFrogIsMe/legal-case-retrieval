@@ -54,8 +54,8 @@ def build_batch_request(record: dict, custom_id: str) -> dict:
                     "schema": get_schema(kind),
                 },
             },
-            "max_completion_tokens": 2048,  # 調為 low 後，2048 足夠
-            "reasoning_effort": "low",     # 限制推理強度為 low 以節省費用與時間
+            "max_completion_tokens": 2048,  # 調弱後不需要 4096
+            "reasoning_effort": "low",       # 降低推理強度，節省 token 與時間
         },
     }
 
