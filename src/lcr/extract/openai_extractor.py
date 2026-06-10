@@ -108,7 +108,7 @@ def build_batch_request(record: dict, custom_id: str) -> dict:
                     "schema": EXTRACTION_SCHEMA,
                 },
             },
-            "max_tokens": 512,
+            "max_completion_tokens": 512,  # gpt-5 系列用 max_completion_tokens
             "temperature": 0,
         },
     }
