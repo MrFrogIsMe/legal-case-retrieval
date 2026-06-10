@@ -6,12 +6,13 @@
 """
 from __future__ import annotations
 
+import datetime
 import json
 import time
-import datetime
 from pathlib import Path
 
 from openai import OpenAI
+
 from lcr.config import settings
 
 BATCH_IDS = [
