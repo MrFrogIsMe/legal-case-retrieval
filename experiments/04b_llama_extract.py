@@ -85,33 +85,33 @@ def extract_one(record: dict, model, tokenizer) -> dict:
         },
     ]
 
-    # 使用 chat template
-    input_ids = tokenizer.apply_chat_template(
+    # transformers v5 breaking change:
+    # apply_chat_template 現在回傳 BatchEncoding（非 tensor），要用 ** 解包
+    text = tokenizer.apply_chat_template(
         messages,
+        tokenize=False,
         add_generation_prompt=True,
-        return_tensors="pt",
-    ).to(model.device)
+    )
+    model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
 
     with torch.no_grad():
         output = model.generate(
-            input_ids,
+            **model_inputs,
             max_new_tokens=512,
-            temperature=0.1,
             do_sample=False,
             pad_token_id=tokenizer.eos_token_id,
         )
 
-    new_tokens = output[0][input_ids.shape[-1]:]
-    text = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+    new_tokens = output[0][model_inputs["input_ids"].shape[1]:]
+    text_out = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
 
     # 嘗試解析 JSON
     try:
-        # 找第一個 { 到最後一個 }
-        start = text.index("{")
-        end = text.rindex("}") + 1
-        return json.loads(text[start:end])
+        start = text_out.index("{")
+        end = text_out.rindex("}") + 1
+        return json.loads(text_out[start:end])
     except (ValueError, json.JSONDecodeError):
-        return {"error": "parse_failed", "raw": text[:200]}
+        return {"error": "parse_failed", "raw": text_out[:200]}
 
 
 def main() -> int:
