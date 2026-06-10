@@ -20,12 +20,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-LLAMA_MODEL_ID = "lianghsun/Llama-3.2-Taiwan-Legal-3B-Instruct"
+LLAMA_MODEL_ID = "benchang1110/Qwen2.5-Taiwan-3B-Instruct"  # 免審核，繁體中文，3B
 
-# 備用：若上方模型 gated 未通過審核，改用 GGUF 版（免審核，同樣權重）
-# 需要 llama-cpp-python：pip install llama-cpp-python
-# GGUF_MODEL = "QuantFactory/Llama-3.2-Taiwan-Legal-3B-Instruct-GGUF"
-# GGUF_FILE  = "Llama-3.2-Taiwan-Legal-3B-Instruct.Q4_K_M.gguf"
+# 若 lianghsun gated 通過審核，改回：
+# LLAMA_MODEL_ID = "lianghsun/Llama-3.2-Taiwan-Legal-3B-Instruct"
 
 SYSTEM_PROMPT = """你是台灣法律判決書分析助理。請從判決書內容中抽取結構化要素，
 以 JSON 格式回傳。只輸出 JSON，不要其他說明。"""
