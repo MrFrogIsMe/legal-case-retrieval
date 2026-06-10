@@ -157,7 +157,11 @@ def main() -> int:
     est_cost = (est_input_tokens / 1e6 * 0.25 + est_output_tokens / 1e6 * 2.0) * 0.5
     print(f"  費用估算（Batch 折半）：${est_cost:.2f} USD")
 
-    confirm = input("確認提交？(y/N) ").strip().lower()
+    # 測試模式下自動確認提交，不需互動
+    if args.n:
+        confirm = "y"
+    else:
+        confirm = input("確認提交？(y/N) ").strip().lower()
     if confirm != "y":
         print("取消")
         return 0
