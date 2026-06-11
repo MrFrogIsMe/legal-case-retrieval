@@ -144,7 +144,11 @@ def main() -> int:
     indexer.build_sparse_index(records)
 
     print("\n=== Phase 2：BGE-M3 稠密索引 ===")
-    indexer.build_dense_index(records, collection_name="legal_cases")
+    # 8GB 顯存（RTX 3060 Ti）建議 batch_size=32 防 OOM；可由 LCR_EMBED_BATCH 覆寫
+    embed_batch = int(os.environ.get("LCR_EMBED_BATCH", "32"))
+    indexer.build_dense_index(
+        records, collection_name="legal_cases", batch_size=embed_batch
+    )
 
     print("\n=== 完成 ===")
     print(f"  ChromaDB：{chroma_dir}")
