@@ -31,7 +31,7 @@ from lcr.data.filter import (  # noqa: E402
     is_year_in_range,
 )
 
-PER_TITLE_CAP = 50
+PER_TITLE_CAP = 999999  # 設為極大值，不做任何案由上限篩選，保留全量近10年地院刑事案件（81,644 筆）
 RANDOM_SEED = 42
 MIN_YEAR = 105  # 民國 105 年
 MAX_YEAR = 114  # 民國 114 年
