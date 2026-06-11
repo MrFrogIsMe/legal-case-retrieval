@@ -120,8 +120,6 @@ def main() -> int:
     print("=" * 52)
 
     # 寫結果 md
-    out = processed.parent / "legal-case-retrieval" / "experiments" / "results" / "07_eval.md"
-    # fallback：寫到 processed 旁
     try:
         lines = [
             "# 實驗 07：檢索消融評估結果\n",
