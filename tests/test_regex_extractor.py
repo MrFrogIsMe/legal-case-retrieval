@@ -38,6 +38,37 @@ def test_extract_articles_empty():
     assert extract_articles("") == []
 
 
+def test_extract_articles_subarticle():
+    # 「之N」格式：刑法第185條之4（肇事逃逸）
+    arts = extract_articles("被告涉犯刑法第185條之4之肇事逃逸罪。")
+    assert "刑法 185-4" in arts, f"應含刑法 185-4，實際：{arts}"
+
+
+def test_extract_articles_same_law():
+    # 「同法第X條」應沿用前一個法律名
+    arts = extract_articles("依社會秩序維護法第63條，並依同法第45條裁處。")
+    assert "社會秩序維護法 63" in arts
+    assert "社會秩序維護法 45" in arts, f"同法應沿用，實際：{arts}"
+
+
+def test_extract_articles_no_noise():
+    # 真實判決常見雜訊：動詞/殘字黏在法律名前，白名單版不該抽出殘字
+    text = (
+        "爰依社會秩序維護法第20條規定，亦因社會秩序維護法第32條，"
+        "維護法並無類似刑法第85條之規定，序維護法第63條。"
+    )
+    arts = extract_articles(text)
+    # 應只認白名單全名，不該出現殘字法律名
+    for a in arts:
+        law = a.rsplit(" ", 1)[0]
+        assert law in (
+            "社會秩序維護法",
+            "刑法",
+        ), f"出現非白名單殘字法律名：{a}（全部：{arts}）"
+    assert "社會秩序維護法 20" in arts
+    assert "刑法 85" in arts
+
+
 # --- 賠償金額 ---
 
 def test_extract_compensation_basic():
