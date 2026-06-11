@@ -33,18 +33,6 @@ _AMOUNT_RE = re.compile(r"(新?[臺台]?幣)?[\d,]+\s*元")
 # 案號殘留：第30屆 等保留（屬事實），但純案號如 108年度交訴字第5號 去除
 _CASENO_RE = re.compile(r"\d{2,3}年度[\u4e00-\u9fa5]{1,6}字第\d+號")
 
-# 常見姓氏（去人名用）
-_SURNAMES = (
-    "王李張劉陳楊黃趙周吳徐孫朱馬胡郭林何高梁鄭羅宋謝唐韓曹許鄧蕭馮曾程蔡彭潘"
-    "袁董余蘇葉呂魏蔣田杜丁沈姜范江傅鍾盧汪戴崔任陸廖姚方金邱夏譚韋賈鄒石熊孟"
-    "秦閻薛侯雷白龍段郝孔邵史毛常萬顧賴武康賀嚴尹錢施牛洪龔"
-)
-# 姓名（2-3 字），含頓號串接：李永傑、李曉峰、鄭博隆
-_NAME_RE = re.compile(
-    rf"[{_SURNAMES}][\u4e00-\u9fa5]{{1,2}}"
-    rf"(、[{_SURNAMES}][\u4e00-\u9fa5]{{1,2}})*"
-)
-
 # 收尾：清掉孤立標點與重複連接詞
 _DANGLING = re.compile(r"[，、；。]\s*(?=[，、；。])")
 _DUP_YU = re.compile(r"於\s*於")
@@ -53,7 +41,12 @@ _LEAD_PUNCT = re.compile(r"^[，、；。\s]+")
 
 
 def clean_for_embedding(text: str) -> str:
-    """清洗 facts_summary 供 dense embedding：去人名/日期/法條/金額/案號。"""
+    """清洗 facts_summary 供 dense embedding：去日期/法條/金額/案號。
+
+    註：刻意「不」做人名移除——中文人名與常用字高度重疊（程/陳/方/林…），
+    純 regex 必然誤傷（如「過程平和」→「過X和」），誤傷比雜訊更傷語意。
+    人名對 BGE-M3 語意向量影響小，故保留。
+    """
     if not text:
         return ""
     t = text
@@ -61,7 +54,6 @@ def clean_for_embedding(text: str) -> str:
     t = _LAW_RE.sub("", t)
     t = _DATE_RE.sub("", t)
     t = _AMOUNT_RE.sub("", t)
-    t = _NAME_RE.sub("當事人", t)
     # 收尾整理
     t = _DUP_YU.sub("於", t)
     t = _MULTI_PUNCT.sub("，", t)
