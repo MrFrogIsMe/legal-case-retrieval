@@ -71,8 +71,14 @@ class Indexer:
         records: list[dict],
         collection_name: str = "legal_cases",
         batch_size: int = 128,
+        recreate: bool = True,
     ) -> None:
-        """建立 ChromaDB 稠密向量索引。"""
+        """建立 ChromaDB 稠密向量索引。
+
+        recreate=True（預設）：建索引前先刪除同名舊 collection，避免上一批
+        殘留資料（如已廢棄的民事筆）污染——get_or_create 不會清舊資料，
+        upsert 只覆蓋同 jid，不同 jid 的舊筆會殘留。
+        """
         import chromadb
 
         # 準備文本
@@ -95,6 +101,12 @@ class Indexer:
 
         print(f"初始化 ChromaDB → {self.chroma_dir}")
         client = chromadb.PersistentClient(path=str(self.chroma_dir))
+        if recreate:
+            try:
+                client.delete_collection(collection_name)
+                print(f"  已刪除舊 collection「{collection_name}」（乾淨重建）")
+            except Exception:
+                pass  # 不存在則略過
         collection = client.get_or_create_collection(
             name=collection_name,
             metadata={"hnsw:space": "cosine"},
