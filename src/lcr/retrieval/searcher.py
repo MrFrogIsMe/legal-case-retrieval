@@ -68,7 +68,7 @@ class Searcher:
         self,
         query_text: str,
         top_k: int = 50,
-        kind_filter: Literal["criminal", "civil", "both"] = "both",
+        kind_filter: Literal["criminal", "civil", "both"] = "criminal",
     ) -> list[tuple[str, float]]:
         """BGE-M3 向量檢索，回傳 [(jid, similarity), ...]。"""
         query_emb = self.model.encode(
@@ -95,7 +95,7 @@ class Searcher:
         self,
         query_text: str,
         top_k: int = 50,
-        kind_filter: Literal["criminal", "civil", "both"] = "both",
+        kind_filter: Literal["criminal", "civil", "both"] = "criminal",
     ) -> list[tuple[str, float]]:
         """BM25s 稀疏文字檢索，回傳 [(jid, score), ...]。"""
         import bm25s
@@ -115,7 +115,7 @@ class Searcher:
         query_text: str,
         top_k: int = 5,
         rrf_k: int = 60,
-        kind_filter: Literal["criminal", "civil", "both"] = "both",
+        kind_filter: Literal["criminal", "civil", "both"] = "criminal",
     ) -> list[tuple[str, float]]:
         """RRF 混合檢索（dense + sparse → 融合）。"""
         dense = self.dense_search(query_text, top_k=50, kind_filter=kind_filter)

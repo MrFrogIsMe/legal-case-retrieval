@@ -23,6 +23,7 @@ _CRIMINAL_PROCEDURAL_TITLES: frozenset[str] = frozenset([
     "聲明異議",
 ])
 
+# DEPRECATED（design_change_v2）：純刑事範圍下不再使用，保留供參考。
 # 民事：JCASE 完全符合以下 → 程序性
 _CIVIL_PROCEDURAL_JCASES: frozenset[str] = frozenset([
     "司促",   # 支付命令（司法促請）
@@ -35,6 +36,7 @@ _CIVIL_PROCEDURAL_JCASES: frozenset[str] = frozenset([
     "台抗",   # 抗告
 ])
 
+# DEPRECATED（design_change_v2）：純刑事範圍下不再使用，保留供參考。
 # 民事：案由含以下字串 → 程序性（純金錢催收或程序命令）
 _CIVIL_PROCEDURAL_TITLE_PATTERNS: tuple[str, ...] = (
     "支付命令",
@@ -56,6 +58,7 @@ _CIVIL_PROCEDURAL_TITLE_PATTERNS: tuple[str, ...] = (
     "返還借款",
 )
 
+# DEPRECATED（design_change_v2）：純刑事範圍下不再使用，保留供參考。
 # 民事：即使命中上面的 pattern，只要同時含以下關鍵字 → 保留（有實體爭議）
 _CIVIL_RETAIN_OVERRIDE: tuple[str, ...] = (
     "損害賠償",
@@ -81,7 +84,10 @@ def is_criminal_procedural(jcase: str, title: str) -> bool:
 
 
 def is_civil_procedural(jcase: str, title: str) -> bool:
-    """民事：是否為程序性案件（應排除）。"""
+    """民事：是否為程序性案件（應排除）。
+
+    DEPRECATED（design_change_v2）：純刑事範圍下不再呼叫，保留供參考。
+    """
     if jcase in _CIVIL_PROCEDURAL_JCASES:
         return True
     if any(pat in title for pat in _CIVIL_PROCEDURAL_TITLE_PATTERNS):
