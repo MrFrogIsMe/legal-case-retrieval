@@ -46,7 +46,10 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_base_url: str = ""
     eval_model: str = "gemini-3.5-flash"
-    eval_max_tokens: int = 1024
+    # gemini-3.5-flash 經此閘道為推理模型（會吃 reasoning_tokens），
+    # max_tokens 須給足以容納「推理 + 實際輸出」，否則 finish_reason=length
+    # 導致 content=None。實測 reasoning 約 200-600 token，故預設 4096。
+    eval_max_tokens: int = 4096
 
     # --- 子集篩選參數（舊版，保留相容性）---
     # 目標案由關鍵字（出現在 JTITLE 即視為候選）
