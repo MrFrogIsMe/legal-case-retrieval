@@ -23,6 +23,7 @@ _CRIMINAL_PROCEDURAL_TITLES: frozenset[str] = frozenset([
     "聲明異議",
 ])
 
+# DEPRECATED（design_change_v2）：純刑事範圍下不再使用，保留供參考。
 # 民事：JCASE 完全符合以下 → 程序性
 _CIVIL_PROCEDURAL_JCASES: frozenset[str] = frozenset([
     "司促",   # 支付命令（司法促請）
@@ -35,6 +36,7 @@ _CIVIL_PROCEDURAL_JCASES: frozenset[str] = frozenset([
     "台抗",   # 抗告
 ])
 
+# DEPRECATED（design_change_v2）：純刑事範圍下不再使用，保留供參考。
 # 民事：案由含以下字串 → 程序性（純金錢催收或程序命令）
 _CIVIL_PROCEDURAL_TITLE_PATTERNS: tuple[str, ...] = (
     "支付命令",
@@ -56,6 +58,7 @@ _CIVIL_PROCEDURAL_TITLE_PATTERNS: tuple[str, ...] = (
     "返還借款",
 )
 
+# DEPRECATED（design_change_v2）：純刑事範圍下不再使用，保留供參考。
 # 民事：即使命中上面的 pattern，只要同時含以下關鍵字 → 保留（有實體爭議）
 _CIVIL_RETAIN_OVERRIDE: tuple[str, ...] = (
     "損害賠償",
@@ -81,7 +84,10 @@ def is_criminal_procedural(jcase: str, title: str) -> bool:
 
 
 def is_civil_procedural(jcase: str, title: str) -> bool:
-    """民事：是否為程序性案件（應排除）。"""
+    """民事：是否為程序性案件（應排除）。
+
+    DEPRECATED（design_change_v2）：純刑事範圍下不再呼叫，保留供參考。
+    """
     if jcase in _CIVIL_PROCEDURAL_JCASES:
         return True
     if any(pat in title for pat in _CIVIL_PROCEDURAL_TITLE_PATTERNS):
@@ -127,3 +133,29 @@ def is_year_in_range(jyear: str, min_year: int = 105, max_year: int = 114) -> bo
 def is_district_court(court_name: str) -> bool:
     """是否為地方法院（含簡易庭）。排除最高法院、高等法院。"""
     return "地方法院" in court_name or "簡易庭" in court_name
+
+
+# ---------------------------------------------------------------------------
+# 子集篩選相容性邏輯（用於 01_subset_filter.py）
+# ---------------------------------------------------------------------------
+
+class FilterCriteria:
+    def __init__(self, settings):
+        self.target_title_keywords = settings.target_title_keywords
+        self.target_case_prefixes = settings.target_case_prefixes
+        self.district_court_only = settings.district_court_only
+
+def criteria_from_settings(settings) -> FilterCriteria:
+    return FilterCriteria(settings)
+
+def should_keep(title: str, jcase: str, court_name: str, criteria: FilterCriteria) -> bool:
+    # 1. 排除程序性
+    if is_criminal_procedural(jcase, title):
+        return False
+    # 2. 地方法院過濾
+    if criteria.district_court_only and not is_district_court(court_name):
+        return False
+    # 3. 案由關鍵字或案號前綴過濾
+    has_title_kw = any(kw in title for kw in criteria.target_title_keywords)
+    has_case_prefix = any(jcase.startswith(pre) for pre in criteria.target_case_prefixes)
+    return has_title_kw or has_case_prefix

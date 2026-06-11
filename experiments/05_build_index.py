@@ -29,6 +29,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from lcr.config import settings  # noqa: E402
+from lcr.extract.regex_extractor import extract_articles  # noqa: E402
 from lcr.retrieval.indexer import Indexer  # noqa: E402
 
 
@@ -74,6 +75,12 @@ def load_records(
         s = seg.get(jid, {})
         g = gpt.get(jid, {})
 
+        # 法條：regex 從原始切段文字抽（不靠 LLM，免費且精確），供 BM25 與 metadata
+        full_text = "\n".join([
+            s.get("main", ""), s.get("facts", ""), s.get("reasoning", "")
+        ])
+        articles = extract_articles(full_text) if full_text.strip() else []
+
         records.append({
             "jid": jid,
             "kind": meta.get("kind", "criminal"),
@@ -85,6 +92,8 @@ def load_records(
             "facts": g.get("facts_summary") or s.get("facts") or s.get("reasoning") or "",
             "reasoning": s.get("reasoning", ""),
             "main": s.get("main", ""),
+            # 法條（regex 抽）
+            "articles": articles,
             # 抽取欄位
             "verdict": g.get("verdict", ""),
             "sentence": g.get("sentence"),
@@ -135,7 +144,12 @@ def main() -> int:
     indexer.build_sparse_index(records)
 
     print("\n=== Phase 2：BGE-M3 稠密索引 ===")
-    indexer.build_dense_index(records, collection_name="legal_cases")
+    # 8GB 顯存（RTX 3060 Ti）跑 BGE-M3 fp16，實測 batch=32 僅用 2.6GB、batch=128
+    # 仍安全，較大 batch 可減少 kernel overhead 加速。OOM 時用 LCR_EMBED_BATCH 調小。
+    embed_batch = int(os.environ.get("LCR_EMBED_BATCH", "128"))
+    indexer.build_dense_index(
+        records, collection_name="legal_cases", batch_size=embed_batch
+    )
 
     print("\n=== 完成 ===")
     print(f"  ChromaDB：{chroma_dir}")

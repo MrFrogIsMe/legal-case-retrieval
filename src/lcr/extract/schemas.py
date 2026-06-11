@@ -61,6 +61,7 @@ CRIMINAL_USER_TEMPLATE = """以下是刑事判決書內容（已切段）：
 # 民事 schema
 # ---------------------------------------------------------------------------
 
+# DEPRECATED（design_change_v2）：專案收斂為純刑事，民事 schema 不再使用，保留不刪以維持相容。
 CIVIL_SCHEMA = {
     "type": "object",
     "properties": {
@@ -87,6 +88,7 @@ CIVIL_SCHEMA = {
     "additionalProperties": False,
 }
 
+# DEPRECATED（design_change_v2）：專案收斂為純刑事，民事 template 不再使用，保留不刪以維持相容。
 CIVIL_USER_TEMPLATE = """以下是民事判決書內容（已切段）：
 
 【主文】

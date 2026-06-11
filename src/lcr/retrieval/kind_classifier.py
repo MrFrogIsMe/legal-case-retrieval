@@ -26,6 +26,9 @@ def infer_kind(
 ) -> KindType:
     """從使用者事由推斷要搜哪種判決。
 
+    DEPRECATED（design_change_v2）：專案已收斂為純刑事，搜尋永遠為
+    criminal，本函式的 civil/both 分支已無實際用途，保留僅為相容既有測試。
+
     Args:
         query:     使用者口語事由
         collected: clarify 蒐集的結構化要件（可選）

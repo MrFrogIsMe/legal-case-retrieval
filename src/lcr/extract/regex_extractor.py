@@ -10,50 +10,90 @@ import re
 from dataclasses import dataclass, field
 
 # ---------------------------------------------------------------------------
-# 法條 regex
+# 法條 regex（白名單法律名，避免貪婪比對抓進殘字／動詞）
 # ---------------------------------------------------------------------------
 
-# 台灣法條引用格式：
-#   刑法第284條  刑法第 284 條  民法第184條第1項
-#   刑事訴訟法第303條  道路交通管理處罰條例第62條
+# 台灣刑事判決常見法律名白名單（依字數長者優先，避免「社會秩序維護法」被「維護法」截斷）
+_LAW_NAMES: tuple[str, ...] = (
+    "中華民國刑法",
+    "刑法",
+    "刑事訴訟法",
+    "少年事件處理法",
+    "兒童及少年性剝削防制條例",
+    "道路交通管理處罰條例",
+    "毒品危害防制條例",
+    "槍砲彈藥刀械管制條例",
+    "社會秩序維護法",
+    "家庭暴力防治法",
+    "性騷擾防治法",
+    "個人資料保護法",
+    "著作權法",
+    "商標法",
+    "藥事法",
+    "廢棄物清理法",
+    "森林法",
+    "稅捐稽徵法",
+    "公職人員選舉罷免法",
+    "貪污治罪條例",
+    "組織犯罪防制條例",
+    "洗錢防制法",
+    "銀行法",
+    "證券交易法",
+    "公司法",
+    "爆竹煙火管理條例",
+    "行政罰法",
+    "民法",
+    "民事訴訟法",
+)
+
+# 依長度由長至短排序，確保「社會秩序維護法」優先於「維護法」「民法」等子字串
+_LAW_NAMES_SORTED = sorted(_LAW_NAMES, key=len, reverse=True)
+_LAW_ALT = "|".join(re.escape(n) for n in _LAW_NAMES_SORTED)
+
+# 完整引用：<白名單法律名> 第 X 條 [之N] [第N項]
+#   例：刑法第185條之4、社會秩序維護法第63條第1項、道路交通管理處罰條例第62條
 _LAW_ARTICLE_RE = re.compile(
-    r"(?:中華民國)?(?P<law>[^\s第，。；、「」【】\d]{2,20}?)"
-    r"第\s*(?P<article>\d+(?:-\d+)?)\s*條"
-    r"(?:第\s*(?P<para>\d+)\s*項)?",
+    r"(?P<law>" + _LAW_ALT + r")"
+    r"第\s*(?P<article>\d+)\s*條"
+    r"(?:\s*之\s*(?P<sub>\d+))?",
     re.UNICODE,
 )
 
-# 主文中的法條（格式較簡短）
-_SHORT_ARTICLE_RE = re.compile(
-    r"(?:刑法|民法|刑事訴訟法|民事訴訟法|道路交通管理處罰條例"
-    r"|著作權法|毒品危害防制條例|社會秩序維護法)"
-    r"\s*第?\s*(\d+(?:-\d+)?)\s*條",
-    re.UNICODE,
-)
+# 「同法第X條」：沿用上一個出現的法律名（理由段常見）
+_SAME_LAW_RE = re.compile(r"同法第\s*(?P<article>\d+)\s*條(?:\s*之\s*(?P<sub>\d+))?")
+
+
+def _fmt(law: str, article: str, sub: str | None) -> str:
+    """格式化為「刑法 185-4」便於 BM25 精確比對。"""
+    art = f"{article}-{sub}" if sub else article
+    return f"{law} {art}"
 
 
 def extract_articles(text: str) -> list[str]:
-    """從文本中抽取所有法條引用，回傳去重後的清單。
+    """從文本抽取所有法條引用，回傳去重後排序清單。
 
-    格式：「刑法284」「民法184-1」（略去第/條方便比對）
+    僅認白名單法律名（見 _LAW_NAMES），避免把動詞／殘字當法律名。
+    格式：「刑法 185-4」「社會秩序維護法 63」（去「第/條」便於比對）。
+    並處理「同法第X條」沿用前一個法律名。
     """
     results: set[str] = set()
+    last_law: str | None = None
 
+    # 依出現位置掃描，才能讓「同法」正確沿用前一個法律名
+    matches = []
     for m in _LAW_ARTICLE_RE.finditer(text):
-        law = m.group("law").strip()
-        article = m.group("article")
-        # 過濾明顯噪音（法律名稱不應包含數字或超短）
-        if len(law) < 2 or any(c.isdigit() for c in law):
-            continue
-        results.add(f"{law} {article}")
+        matches.append((m.start(), "named", m))
+    for m in _SAME_LAW_RE.finditer(text):
+        matches.append((m.start(), "same", m))
+    matches.sort(key=lambda x: x[0])
 
-    for m in _SHORT_ARTICLE_RE.finditer(text):
-        # 這個 pattern 的第一個 group 是 law name，需從 match 重組
-        full = m.group(0)
-        art = m.group(1)
-        law_name = full[: full.index(art) - 1].replace("第", "").replace(" ", "").strip()
-        if law_name:
-            results.add(f"{law_name} {art}")
+    for _pos, kind, m in matches:
+        if kind == "named":
+            law = m.group("law")
+            last_law = law
+            results.add(_fmt(law, m.group("article"), m.group("sub")))
+        elif kind == "same" and last_law:
+            results.add(_fmt(last_law, m.group("article"), m.group("sub")))
 
     return sorted(results)
 

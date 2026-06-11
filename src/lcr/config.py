@@ -38,6 +38,19 @@ class Settings(BaseSettings):
     # 本地 Llama（home_wsl）
     llama_model_id: str = "lianghsun/Llama-3.2-Taiwan-Legal-3B-Instruct"
 
+    # --- 評估集生成 LLM（OpenAI 相容閘道）---
+    # 用於合成評估集的口語 query 生成（experiments/06_make_evalset.py）。
+    # 與要素抽取（gpt-5-mini）分離，方便獨立替換評估模型。
+    # 走公司內部 AI 閘道（OpenAI 相容介面），base_url 結尾為 /v1。
+    # key 與 base_url 來源：.env 的 LCR_GEMINI_API_KEY / LCR_GEMINI_BASE_URL。
+    gemini_api_key: str = ""
+    gemini_base_url: str = ""
+    eval_model: str = "gemini-3.5-flash"
+    # gemini-3.5-flash 經此閘道為推理模型（會吃 reasoning_tokens），
+    # max_tokens 須給足以容納「推理 + 實際輸出」，否則 finish_reason=length
+    # 導致 content=None。實測 reasoning 約 200-600 token，故預設 4096。
+    eval_max_tokens: int = 4096
+
     # --- 子集篩選參數（舊版，保留相容性）---
     # 目標案由關鍵字（出現在 JTITLE 即視為候選）
     target_title_keywords: tuple[str, ...] = (

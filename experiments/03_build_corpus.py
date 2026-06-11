@@ -31,17 +31,17 @@ from lcr.data.filter import (  # noqa: E402
     is_year_in_range,
 )
 
-PER_TITLE_CAP = 50
+PER_TITLE_CAP = 999999  # 設為極大值，不做任何案由上限篩選，保留全量近10年地院刑事案件（81,644 筆）
 RANDOM_SEED = 42
 MIN_YEAR = 105  # 民國 105 年
 MAX_YEAR = 114  # 民國 114 年
 
 
 def iter_all_files(dataset_root: Path):
-    """產生 (path, court_name, kind) for 刑事 + 民事。
+    """產生 (path, court_name, kind) for 刑事。
 
-    kind: "criminal" | "civil"
-    資料結構：Dataset/<院別><刑事|民事>/<年月批次>/<判決>.json
+    kind: "criminal"
+    資料結構：Dataset/<院別>刑事/<年月批次>/<判決>.json
     """
     for court_dir in dataset_root.iterdir():
         if not court_dir.is_dir():
@@ -50,11 +50,8 @@ def iter_all_files(dataset_root: Path):
         if name.endswith("刑事"):
             kind = "criminal"
             court_name = name.removesuffix("刑事")
-        elif name.endswith("民事"):
-            kind = "civil"
-            court_name = name.removesuffix("民事")
         else:
-            continue  # 行政/懲戒等不納入
+            continue  # 跳過民事、行政/懲戒等
 
         for batch in court_dir.iterdir():
             if not batch.is_dir():

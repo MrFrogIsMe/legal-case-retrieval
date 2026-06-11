@@ -37,11 +37,17 @@
   - 第二刀：分層抽樣（50 筆/案由，保留多樣性）
   - 不納入說明（行政、懲戒、最高法院、104 年前）
 
-- `docs/design_change_v1.md` — 設計變更記錄：刑民分流 schema。
+- `docs/design_change_v1.md` — 設計變更記錄：刑民分流 schema。（已被 v2 廢棄）
   - 觸發原因：GPT batch 50 筆評估，verdict 54% 回「其他」
   - 方案 B：刑事/民事各自 schema（schemas.py）
   - 搜尋時 kind 判斷邏輯（kind_classifier.py）
   - 受影響檔案清單
+
+- `docs/design_change_v2.md` — 設計變更：收斂至「僅地方法院一審刑事」。
+  - 排除民事、二三審；資料現況盤點與需重跑/調整清單；v1 刑民分流廢棄理由
+
+- `docs/design_change_v3.md` — 設計變更：dense/sparse 分流 + 法條入 BM25（regex）。
+  - dense 餵純事實摘要、sparse 餵摘要+案由+法條號；法條用 regex 不用 LLM；白名單去雜訊
 
 ## 資料
 
