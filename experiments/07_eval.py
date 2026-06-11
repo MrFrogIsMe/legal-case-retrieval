@@ -70,6 +70,8 @@ def evaluate(searcher: Searcher, pairs: list[dict], method: str) -> dict:
             results = searcher.sparse_search(q, top_k=10)
         elif method == "hybrid":
             results = searcher.hybrid_search(q, top_k=10)
+        elif method == "hybrid_rerank":
+            results = searcher.hybrid_rerank(q, top_k=10, candidate_n=20)
         else:
             raise ValueError(method)
 
@@ -104,7 +106,7 @@ def main() -> int:
     )
 
     results = []
-    for method in ("dense", "bm25", "hybrid"):
+    for method in ("dense", "bm25", "hybrid", "hybrid_rerank"):
         print(f"跑 {method} ...")
         results.append(evaluate(searcher, pairs, method))
 
