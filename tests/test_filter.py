@@ -87,3 +87,19 @@ def test_is_district_court():
     assert is_district_court("三重簡易庭")
     assert not is_district_court("最高法院")
     assert not is_district_court("臺灣高等法院")
+
+
+# --- 子集篩選相容性測試 ---
+
+def test_should_keep():
+    from lcr.config import settings
+    from lcr.data.filter import criteria_from_settings, should_keep
+    
+    criteria = criteria_from_settings(settings)
+    
+    # 地院且符合關鍵字，保留
+    assert should_keep("過失傷害", "交易", "臺灣士林地方法院", criteria)
+    # 程序性，不留
+    assert not should_keep("聲明異議", "交聲", "臺灣士林地方法院", criteria)
+    # 非地院，不留
+    assert not should_keep("過失傷害", "交易", "最高法院", criteria)

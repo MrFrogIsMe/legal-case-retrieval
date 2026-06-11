@@ -127,3 +127,29 @@ def is_year_in_range(jyear: str, min_year: int = 105, max_year: int = 114) -> bo
 def is_district_court(court_name: str) -> bool:
     """是否為地方法院（含簡易庭）。排除最高法院、高等法院。"""
     return "地方法院" in court_name or "簡易庭" in court_name
+
+
+# ---------------------------------------------------------------------------
+# 子集篩選相容性邏輯（用於 01_subset_filter.py）
+# ---------------------------------------------------------------------------
+
+class FilterCriteria:
+    def __init__(self, settings):
+        self.target_title_keywords = settings.target_title_keywords
+        self.target_case_prefixes = settings.target_case_prefixes
+        self.district_court_only = settings.district_court_only
+
+def criteria_from_settings(settings) -> FilterCriteria:
+    return FilterCriteria(settings)
+
+def should_keep(title: str, jcase: str, court_name: str, criteria: FilterCriteria) -> bool:
+    # 1. 排除程序性
+    if is_criminal_procedural(jcase, title):
+        return False
+    # 2. 地方法院過濾
+    if criteria.district_court_only and not is_district_court(court_name):
+        return False
+    # 3. 案由關鍵字或案號前綴過濾
+    has_title_kw = any(kw in title for kw in criteria.target_title_keywords)
+    has_case_prefix = any(jcase.startswith(pre) for pre in criteria.target_case_prefixes)
+    return has_title_kw or has_case_prefix
