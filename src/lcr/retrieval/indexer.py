@@ -27,17 +27,20 @@ def _dense_text(r: dict) -> str:
     return text[:4000].strip()
 
 
-def _sparse_text(r: dict) -> str:
-    """Sparse（BM25 精確比對）用文字：事實摘要 + 案由 + 法條號。
+def _sparse_text(r: dict, include_articles: bool = True) -> str:
+    """Sparse（BM25 精確比對）用文字：事實摘要 + 案由 [+ 法條號]。
 
     法條號（如「刑法 185-4」）是固定字串，最適合 BM25 token 比對，
     補上後才能對齊 NyayaRAG「檢索加入法條」的設計（design_v1 第 3.2 節 B-2）。
+
+    include_articles=False：不摻法條，供「加法條 vs 不加法條」消融對照組使用。
     """
     parts = [
         r.get("facts") or r.get("reasoning") or "",
         r.get("title") or "",
-        " ".join(r.get("articles") or []),
     ]
+    if include_articles:
+        parts.append(" ".join(r.get("articles") or []))
     return " ".join(p for p in parts if p).strip()[:4000]
 
 
@@ -138,15 +141,19 @@ class Indexer:
     def build_sparse_index(
         self,
         records: list[dict],
+        include_articles: bool = True,
     ) -> None:
-        """建立 BM25s 稀疏索引（內建中文 tokenizer，不需 jieba）。"""
+        """建立 BM25s 稀疏索引（內建中文 tokenizer，不需 jieba）。
+
+        include_articles=False：建不含法條的對照索引（消融用）。
+        """
         import bm25s
-        print("建立 BM25s 稀疏索引...")
+        print(f"建立 BM25s 稀疏索引（含法條={include_articles}）...")
         corpus_texts = []
         jids = []
 
         for r in records:
-            text = _sparse_text(r)
+            text = _sparse_text(r, include_articles=include_articles)
             if not text:
                 continue
             corpus_texts.append(text)
