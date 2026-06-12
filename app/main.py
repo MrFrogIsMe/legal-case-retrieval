@@ -24,6 +24,7 @@ from urllib.parse import unquote
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
@@ -341,3 +342,21 @@ def stats(
         ),
         by_year=[YearBucket(**y) for y in st["by_year"]],
     )
+
+
+# ---------------------------------------------------------------------------
+# 靜態前端（web/）與 mock 資料
+# ---------------------------------------------------------------------------
+# 前端為純靜態頁（web/，組員 spaces-lalala 開發），same-origin 打 /api/v1。
+# 掛在 API 路由之後，不影響任何 /api/v1 端點。
+# - /web   → web/        （index.html + js/css，USE_MOCK=false 時直打上方端點）
+# - /mock  → mock/       （USE_MOCK=true 時前端讀此處 JSON，離線展示用）
+# 上線走 nginx 反代時，靜態檔可改由 nginx 直接 serve；此處保證單跑 uvicorn 也能用。
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_WEB_DIR = _REPO_ROOT / "web"
+_MOCK_DIR = _REPO_ROOT / "mock"
+
+if _MOCK_DIR.is_dir():
+    app.mount("/mock", StaticFiles(directory=_MOCK_DIR), name="mock")
+if _WEB_DIR.is_dir():
+    app.mount("/web", StaticFiles(directory=_WEB_DIR, html=True), name="web")
