@@ -398,3 +398,43 @@ case 物件欄位：
 - `/search` 的 CaseItem 在 api 契約上「只增不改名」原則下保留舊欄位 `kind`/`score`
   之外，新增 facts_summary/verdict/sentence/compensation/cited_articles/similarity/
   confidence/date_display 等完整欄位。
+
+---
+
+## 10. 前端整合與靜態服務
+
+組員（spaces-lalala）開發的靜態前端已整合進本 repo 的 `web/`（純 HTML + CSS +
+原生 ES modules，無建置步驟、無外部依賴）。前端 same-origin 打 `/api/v1`，
+因此後端只要同源 serve 前端即可，免 CORS、單跑 uvicorn 就能展示完整系統。
+
+### 服務方式（`app/main.py`）
+
+在所有 `/api/v1` 路由註冊**之後**掛兩個 `StaticFiles` mount（不影響任何 API 端點）：
+
+| 路徑 | 來源目錄 | 用途 |
+|------|---------|------|
+| `/web` | `web/`（`html=True`） | 前端頁面：index.html + js/css |
+| `/mock` | `mock/` | `USE_MOCK=true` 時前端讀此處 JSON（離線展示） |
+
+前端 `web/js/config.js` 的 `MOCK_BASE = ../../mock/` 從 `/web/js/` 解析為 `/mock/`，
+與後端 mount 對齊。兩個 mount 皆做存在性檢查（目錄不存在則略過），不影響 CI/測試。
+
+### 啟動與切換
+
+- 開發期單跑：`uv run --extra api uvicorn app.main:app --port 8000`，
+  開 <http://localhost:8000/web/>。
+- 切真實後端：`web/js/config.js` 將 `USE_MOCK = false`（`API_BASE` 已是 `/api/v1`，
+  同源不需改），UI 層零改動。
+
+### 端點對齊（無缺漏）
+
+前端 `web/js/api.js` 呼叫的端點全部對齊後端既有實作：
+`fetchHealth→/health`、`postClarify→/clarify`、`postSearch→/search`、
+`fetchCase→/case/{jid}?query=`、`postTrace→/search/trace`。
+`/stats` 後端有實作、前端目前未獨立呼叫（`/search` 回傳已內含 stats），非缺漏。
+
+### 部署備註（nginx）
+
+上線走 nginx 反代時，靜態檔可改由 nginx 直接 serve（加 `/web/`、`/mock/` location
+指向掛載目錄）以減少 API 進程負載；本節的 FastAPI mount 為 fallback，
+保證單跑 uvicorn（無 nginx）也能用。
