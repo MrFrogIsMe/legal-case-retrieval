@@ -179,14 +179,22 @@ def ground_citations(
 
     verdict = extract.get("verdict")
     if verdict:
-        snip = _find_snippet(segments.get("main", "") or full, verdict)
-        in_main = _find_snippet(segments.get("main", ""), verdict) is not None
+        main = segments.get("main", "")
+        # verdict 是 LLM 歸納的分類標籤，未必字面出現於原文。
+        # 改用 regex 從主文段獨立重判：規則與 LLM 結果一致 → 視為已驗證（互證）。
+        from lcr.extract.regex_extractor import extract_verdict
+
+        regex_verdict = extract_verdict(main) if main else None
+        verified = regex_verdict is not None and regex_verdict == verdict
+        # 片段：取主文段開頭供前端顯示判決結果出處
+        snip = (main[:120].replace("\n", " ").strip()) if main else ""
+        claim = f"本案判決結果為「{verdict}」（規則自主文段重判：{regex_verdict or '未判出'}）"
         citations.append({
-            "claim": f"本案判決結果為「{verdict}」",
-            "source_segment": "main" if in_main else "reasoning",
-            "source_text": snip or "",
+            "claim": claim,
+            "source_segment": "main",
+            "source_text": snip,
             "article": None,
-            "verified": snip is not None,
+            "verified": verified,
         })
 
     for art in cited_articles:

@@ -63,6 +63,23 @@ def test_ground_citations_unverified_article():
     assert by_art["刑法 999"]["verified"] is False
 
 
+def test_ground_citations_verdict_label_not_literal_but_regex_matches():
+    # verdict 標籤「有罪」未字面出現，但主文有「處有期徒刑」→ regex 重判為有罪 → verified
+    segments = {"main": "被告甲犯傷害罪，處有期徒刑參月。", "facts": "", "reasoning": ""}
+    cites = A.ground_citations(segments, {"verdict": "有罪"}, [])
+    verdict_cite = [c for c in cites if c["article"] is None][0]
+    assert verdict_cite["verified"] is True
+    assert verdict_cite["source_segment"] == "main"
+
+
+def test_ground_citations_verdict_mismatch_unverified():
+    # 主文判出「無罪」但 LLM 標「有罪」→ 規則與 LLM 不一致 → 不驗證
+    segments = {"main": "被告無罪。", "facts": "", "reasoning": ""}
+    cites = A.ground_citations(segments, {"verdict": "有罪"}, [])
+    verdict_cite = [c for c in cites if c["article"] is None][0]
+    assert verdict_cite["verified"] is False
+
+
 def test_build_comparison_match():
     rows = A.build_comparison(
         "我開車不小心撞傷人", {"subjective": "過失", "facts_summary": "被告駕車不慎撞傷告訴人受傷"}
