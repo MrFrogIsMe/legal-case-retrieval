@@ -1,0 +1,30 @@
+# 建映像時排除的檔案（縮小 build context、避免機密/大檔進 image）
+.git
+.gitignore
+.github
+.venv
+venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+.mypy_cache
+
+# 機密與環境
+.env
+.env.*
+
+# 資料與索引（走 volume 掛載，不打進 image）
+data/
+*.chroma/
+chroma_db/
+experiments/results/*.jsonl
+
+# 文件與開發產物
+docs/AI_*
+CLAUDE.md
+.claude/
+.DS_Store
+.idea/
+mock/
+README*.md

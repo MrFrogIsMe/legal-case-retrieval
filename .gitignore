@@ -1,5 +1,7 @@
 # AI agent 相關
 .claude/
+CLAUDE.md
+docs/AI_*
 
 # Python
 __pycache__/

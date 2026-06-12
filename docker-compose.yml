@@ -1,0 +1,55 @@
+# 法律判決類案搜尋系統 — 部署編排（docs/roadmap_v1.md 第 4 節，路線 B）
+#
+# 啟動：
+#   docker compose up -d --build
+#   curl http://localhost:8000/api/v1/health
+#
+# 前置：
+#   - 索引與 processed 資料準備在主機 ./data（或改下方 volume 來源路徑）：
+#       ./data/index/chroma、./data/index/bm25、./data/processed/*.jsonl
+#   - .env 提供 LLM 金鑰（LCR_GEMINI_API_KEY / LCR_GEMINI_BASE_URL，clarify/rewrite 用）。
+#
+# GPU（可選，需 nvidia-container-toolkit）：
+#   取消下方 deploy.resources.reservations.devices 註解即可掛 GPU；
+#   無 GPU 時 torch 自動 fallback CPU，功能完整但檢索較慢。
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: legal-case-retrieval:latest
+    container_name: lcr-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      LCR_PROCESSED_DIR: /data/processed
+      LCR_INDEX_DIR: /data/index
+      PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
+    volumes:
+      # 索引與資料走唯讀掛載，不打進 image
+      - ./data/index:/data/index:ro
+      - ./data/processed:/data/processed:ro
+    ports:
+      - "8000:8000"
+    # GPU（取消註解以啟用，需 nvidia-container-toolkit）：
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # 反向代理（可選，上線時開啟；開發期可只跑 api）
+  # nginx:
+  #   image: nginx:1.27-alpine
+  #   container_name: lcr-nginx
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - api
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro

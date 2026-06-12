@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      # 只裝 dev + api：retrieval extra 含 torch cu121（GPU wheel，CI 無 GPU 且巨大），
+      # 測試已設計成用 fake searcher 不依賴 BGE-M3/chromadb，故 CI 可全跑。
+      - name: Install deps (dev + api)
+        run: uv sync --extra dev --extra api
+
+      - name: Ruff lint (app + new modules)
+        run: uv run ruff check app/ src/lcr/retrieval/case_store.py
+
+      - name: Pytest
+        run: uv run pytest -q
+
+  docker-build:
+    runs-on: ubuntu-latest
+    # 驗證 Dockerfile 語法與依賴解析可建（不 push）。torch 層大，僅在 main/PR 跑。
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (no push, cached)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
