@@ -1,0 +1,42 @@
+/* 設計變數：改主題只動這份。
+   色彩語意：墨藍＝系統與結構；朱紅＝警示與誠實揭露（信頭線、鈐印、未驗證標記）；
+   鵝黃＝原文證據高亮。 */
+:root {
+  --ink: #20242a;
+  --ink-soft: #474d55;
+  --muted: #6a7077;
+  --paper: #f7f6f2;
+  --panel: #ffffff;
+  --line: #d9d8d0;
+  --line-soft: #e8e7e0;
+
+  --accent: #2c4a63;
+  --accent-ink: #243d52;
+  --accent-soft: #e7edf2;
+
+  --ok: #2e6e4e;
+  --ok-soft: #e6f0ea;
+  --warn: #a93b32;
+  --warn-soft: #f7e7e4;
+  --note: #7c621c;
+  --note-soft: #f9f1dc;
+
+  --mark: #f5ecc4;
+  --mark-warn: #f6d9d3;
+
+  --font-sans: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei",
+    "Heiti TC", system-ui, -apple-system, sans-serif;
+  --font-serif: "Noto Serif TC", "Songti TC", "PMingLiU", Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", Consolas, "Liberation Mono", monospace;
+
+  --radius: 3px;
+  --wrap-max: 880px;
+  --t: 0.15s ease;
+
+  --fs-0: 0.8rem;
+  --fs-1: 0.875rem;
+  --fs-2: 0.95rem;
+  --fs-3: 1.05rem;
+  --fs-4: 1.3rem;
+  --fs-5: 1.5rem;
+}
