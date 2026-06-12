@@ -57,7 +57,7 @@ select = ["E", "F", "I", "W", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/lcr"]
