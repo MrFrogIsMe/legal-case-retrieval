@@ -14,14 +14,14 @@ def test_infer_subjective():
 def test_infer_articles_drunk_driving():
     arts = A.infer_articles("我朋友酒駕被抓")
     codes = [a["code"] for a in arts]
-    assert "刑法 185-4" in codes
+    assert "刑法 185-3" in codes  # 不能安全駕駛罪（酒駕），非 185-4（肇逃）
 
 
 def test_infer_articles_dedup():
-    # 酒駕 + 肇事逃逸 都映射 185-4，應去重
-    arts = A.infer_articles("酒駕又肇事逃逸")
+    # 過失傷害 + 車禍 都映射刑法 284，應去重
+    arts = A.infer_articles("車禍撞傷人，過失傷害")
     codes = [a["code"] for a in arts]
-    assert codes.count("刑法 185-4") == 1
+    assert codes.count("刑法 284") == 1
 
 
 def test_build_analysis_uses_top_title():
