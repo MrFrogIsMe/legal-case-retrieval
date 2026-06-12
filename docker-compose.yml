@@ -42,14 +42,14 @@ services:
     #           count: 1
     #           capabilities: [gpu]
 
-  # 反向代理（可選，上線時開啟；開發期可只跑 api）
-  # nginx:
-  #   image: nginx:1.27-alpine
-  #   container_name: lcr-nginx
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - api
-  #   ports:
-  #     - "80:80"
-  #   volumes:
-  #     - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+  # 反向代理（上線時對外只開 nginx；開發期可改打 api:8000）
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: lcr-nginx
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
