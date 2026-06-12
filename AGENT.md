@@ -49,6 +49,9 @@
 - `docs/design_change_v3.md` — 設計變更：dense/sparse 分流 + 法條入 BM25（regex）。
   - dense 餵純事實摘要、sparse 餵摘要+案由+法條號；法條用 regex 不用 LLM；白名單去雜訊
 
+- `docs/HANDOFF.md` — 交接文件。環境/資料現況/已完成/待完成/常用指令/已知坑。
+  - 接手者先讀這份 + design_change_v2（純刑事收斂）
+
 ## 資料
 
 - 來源：司法院開放資料（opendata.judicial.gov.tw）
