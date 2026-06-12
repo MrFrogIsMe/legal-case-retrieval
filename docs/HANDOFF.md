@@ -73,11 +73,24 @@
 - `eval/text_clean.py`：embed 文字清洗（實驗證明無顯著效果，僅供參考）
 
 ### API（`app/`）
-- `main.py`：FastAPI，`GET /api/v1/health`、`POST /api/v1/search`（已實機驗證）
-- `schemas.py`：pydantic 契約
+- `main.py`：FastAPI，6 端點全實作（health/search/case/clarify/trace/stats），已實機驗證
+- `schemas.py`：pydantic 契約（analysis/stats/完整 case/case 詳情/clarify/trace/stats）
+- `analysis.py`：純函式（法條/主觀推斷、citation grounding、對比表、trace、clarify 規則）
+- `clarify.py`：clarify 的 LLM 層（最簡，缺要件才呼叫一次 gemini，失敗退回固定句）
+
+### 資料倉（`src/lcr/retrieval/case_store.py`）
+- `CaseStore`：extract 全量常駐 + segmented byte-offset lazy 讀 + stats 聚合（lru_cache）
+- 不重建索引即補齊 search 完整欄位 / case 詳情 / stats（chroma metadata 缺的欄位）
+
+### 部署 / CI（已就緒）
+- `Dockerfile`：python:3.12-slim + uv sync --frozen（含 retrieval），索引走 volume
+- `docker-compose.yml`：api + (選用 nginx)，索引/processed 唯讀掛載，GPU 區塊可選
+- `.dockerignore` / `.github/workflows/ci.yml`（lint-test + docker-build 兩 job）
+- `experiments/12_regression_recall.py`：用 eval.jsonl 把關 Recall@5（門檻 0.80，
+  抽樣 40 題實測 0.925 PASS）
 
 ### 實驗腳本（`experiments/`）
-- 03 建語料 / 04a GPT抽取 / 05 建索引 / 06 評估集 / 07 消融 / 08 清洗對照 / 09 術語表 / 10 HyDE / 11 寬鬆相關性
+- 03 建語料 / 04a GPT抽取 / 05 建索引 / 06 評估集 / 07 消融 / 08 清洗對照 / 09 術語表 / 10 HyDE / 11 寬鬆相關性 / 12 檢索回歸把關
 
 ### 關鍵實驗結論
 - 嚴格 single-relevant：rerank 最佳但僅 R@5 0.173（任務本質難）
@@ -89,28 +102,29 @@
 
 ## 4. 待完成（下一個 agent 的工作，依優先序）
 
-### 4.1 補齊 API 端點（對照 api_v1.md）
-- `GET /api/v1/case/{jid}`：案例詳情（segments 原文 + extracted + citations + comparison）
-  - 需回讀 segmented.jsonl 取三段原文，citation grounding 驗證法條是否真在原文
-- `POST /api/v1/clarify`：對話追問（LLM 判斷缺哪些要件，回 next_question）
-- `GET /api/v1/stats`：群體統計（verdict 分布、compensation range、by_year）
-  - 可從 gpt_extract_all.jsonl 聚合
-- `POST /api/v1/search/trace`：推理過程（agent 思考鏈）
-- `/search` response 補 analysis（法條/過失故意/刑民）、stats、每案 facts_summary/verdict/sentence
+### 4.1 API 端點 — ✅ 已全部完成（feat/api-endpoints-v1）
+6 端點皆上線並實機驗證：health/search/case/clarify/trace/stats。
+詳見 `docs/api_v1.md` 第 9 節與「實作備註」、本檔第 3 節。
+- search 已補 analysis（法條/過失故意/刑民）+ stats + 每案完整欄位
+- case/{jid} 已含 segments 原文 + extracted + citations(regex 交叉驗證) + comparison
+- clarify 規則層 + 最簡 LLM；trace 結構化模板；stats 全量聚合（CaseStore）
 
-### 4.2 部署（roadmap 第 4 節，路線 B）
-- Dockerfile（python:3.12-slim + uv sync --frozen）
-- docker-compose：api + nginx，chroma volume 掛載（索引不打進 image）
-- .github/workflows/ci.yml：uv sync + ruff + pytest + docker build
-- 檢索品質回歸測試（用 eval.jsonl 確保 Recall 不退步）
+### 4.2 部署 — ✅ 已就緒（feat/api-endpoints-v1）
+Dockerfile / docker-compose.yml / .dockerignore / CI（ci.yml）/ 檢索回歸（exp 12）皆完成。
+剩餘可選項：
+- nginx 反代設定檔（compose 已留註解位，需補 `deploy/nginx.conf`）
+- self-hosted GPU runner 上把 exp 12 接進 CI（GitHub 雲端 runner 無 GPU，目前手動跑）
+- docker build 實機驗證（本機/CI 尚未實跑 build；torch 層大，建議 home_wsl 驗證）
 
-### 4.3 可選的研究增強
+### 4.3 可選的研究增強（尚未做）
 - HyDE 策略 C：案由預判改用 dense top-1（現用字串比對會猜錯）
 - 要素抽取可信度實驗（roadmap Week 3）：純 LLM vs LLM+規則 準確率/幻覺率
+- citation grounding 強化：社會秩序維護法「罰鍰」型 verdict 目前 regex 未涵蓋，未互證
+- analysis 法條 hint 表改資料驅動（讀 legal_terms.json）取代目前手寫白名單
 - 整合 `docs/experiment_results.md`（roadmap Week 4 報告）
 
-### 4.4 拆前後端 repo（roadmap 第 1 節）
-- API 穩定後，前端拆到 legal-case-web，本 repo 專注後端
+### 4.4 拆前後端 repo（roadmap 第 1 節，尚未做）
+- API 已穩定，前端可拆到 legal-case-web，本 repo 專注後端
 
 ---
 
@@ -134,8 +148,19 @@ tmux new-session -d -s idx 'LCR_DATASET_ROOT=/home/mrfrog/code/lawundry_test/Dat
   ~/.local/bin/uv run python experiments/05_build_index.py'
 
 # 跑測試
-uv run pytest          # 56 passed
+uv run --extra dev --extra api pytest   # 92 passed（含 API/CaseStore/analysis 34 新測試）
 uv run ruff check .    # 注意：04a/probe/test_filter 有約 20 既有 lint 債（非阻斷）
+
+# 檢索品質回歸把關（需 GPU + 索引）
+LCR_PROCESSED_DIR=/home/mrfrog/data/processed LCR_INDEX_DIR=/home/mrfrog/data/index \
+  PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python \
+  uv run python -u experiments/12_regression_recall.py --threshold 0.80 --sample 40
+# → [PASS] Recall@5 0.925 >= 0.80（exit 0）
+
+# Docker 部署（索引/processed 走 volume，不打進 image）
+#   主機備妥 ./data/index 與 ./data/processed 後：
+docker compose up -d --build
+curl http://localhost:8000/api/v1/health
 ```
 
 ---

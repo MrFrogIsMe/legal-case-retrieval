@@ -367,11 +367,34 @@ case 物件欄位：
 
 ## 9. 端點總覽
 
-| 端點 | 方法 | 用途 | 產品對應 | 載入時機 |
-|------|------|------|---------|---------|
-| /api/v1/clarify | POST | 對話追問 | 方向 A | 表層 |
-| /api/v1/search | POST | 主搜尋 | 列表+analysis+stats | 首屏 |
-| /api/v1/case/{jid} | GET | 案例詳情+citation | 方向 B、第 3 層 | 點開 lazy |
-| /api/v1/search/trace | POST | 推理過程 | 方向 D | 展開才打 |
-| /api/v1/stats | GET | 群體統計 | 方向 C | 圖表頁 |
-| /api/v1/health | GET | 健康檢查 | — | 部署/CI |
+> 實作狀態（feat/api-endpoints-v1 起全部上線；`app/main.py`）：6 個端點皆已實作並於
+> home_wsl 實機驗證。資料來源策略見下方備註。
+
+| 端點 | 方法 | 用途 | 產品對應 | 載入時機 | 狀態 |
+|------|------|------|---------|---------|------|
+| /api/v1/clarify | POST | 對話追問 | 方向 A | 表層 | ✅ |
+| /api/v1/search | POST | 主搜尋 | 列表+analysis+stats | 首屏 | ✅ |
+| /api/v1/case/{jid} | GET | 案例詳情+citation | 方向 B、第 3 層 | 點開 lazy | ✅ |
+| /api/v1/search/trace | POST | 推理過程 | 方向 D | 展開才打 | ✅ |
+| /api/v1/stats | GET | 群體統計 | 方向 C | 圖表頁 | ✅ |
+| /api/v1/health | GET | 健康檢查 | — | 部署/CI | ✅ |
+
+### 實作備註（資料來源）
+
+- 檢索走 `Searcher.search_pipeline`（rewrite + hybrid + rerank，實驗 11 最佳組合）。
+- 抽取欄位（verdict/sentence/compensation/facts_summary）與原文三段**不在 ChromaDB
+  metadata**（建索引時只存 jid/kind/court/jyear/title/articles），改由
+  `CaseStore`（`src/lcr/retrieval/case_store.py`）提供：
+  - gpt_extract_all.jsonl 全量常駐（81k 筆，數十 MB）。
+  - segmented.jsonl 用 byte-offset 索引 lazy 讀單行（避免數百 MB 進記憶體）。
+  - /stats 在 CaseStore 內以 lru_cache 做全量 group-by 聚合。
+  此策略不必重建索引即可補齊所有端點（最小改動）。
+- `/case` 的 `cited_articles` 由 regex 從原文精確抽；citation grounding 對 verdict
+  採「regex 從主文段獨立重判，與 LLM 標籤一致才標 verified」的交叉驗證。
+  限制：社會秩序維護法「罰鍰」型主文目前 regex 未涵蓋，該類 verdict 不互證（誠實揭露）。
+- `/clarify` 規則層先判已蒐集要件與缺漏；缺要件時呼叫一次 LLM 產生自然追問句
+  （gemini gateway，失敗退回固定句），要件足夠則直接 ready_to_search。
+- `/search/trace` 為反映真實管線的結構化步驟模板（非每次呼叫 LLM）。
+- `/search` 的 CaseItem 在 api 契約上「只增不改名」原則下保留舊欄位 `kind`/`score`
+  之外，新增 facts_summary/verdict/sentence/compensation/cited_articles/similarity/
+  confidence/date_display 等完整欄位。

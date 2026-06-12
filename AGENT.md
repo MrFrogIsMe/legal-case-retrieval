@@ -28,7 +28,7 @@
   - 工程與部署（路線 B：FastAPI + docker-compose + nginx + GitHub Actions CI/CD + Test）
 
 - `docs/api_v1.md` — API 規格（前後端契約）。6 個端點完整 request/response schema、
-  錯誤格式、前端 mock 開發指引。前端依此可先行開發。
+  錯誤格式、前端 mock 開發指引。**6 端點皆已實作並實機驗證**（見第 9 節實作備註）。
   - 對應 mock 資料在 `mock/`（見 `mock/README.md`）
 
 - `docs/data_design_v1.md` — 資料設計。子集篩選策略與排除規則完整記錄。
@@ -80,14 +80,23 @@ src/lcr/            核心可重用模組（實驗 + 工程階段共用）
   retrieval/
     kind_classifier.py  從事由推斷 criminal/civil/both
     indexer.py      BGE-M3 dense + BM25s sparse 索引建立
-    searcher.py     混合檢索 + RRF 融合
+    searcher.py     混合檢索 + RRF 融合 + search_pipeline（最佳線上管線）
+    case_store.py   案例資料倉（extract 常駐 + segmented lazy 讀 + stats 聚合）
+app/                FastAPI 後端（工程階段）
+  main.py           6 端點（health/search/case/clarify/trace/stats）
+  schemas.py        pydantic 請求/回應契約
+  analysis.py       業務純函式（法條推斷、citation grounding、對比、trace、clarify 規則）
+  clarify.py        clarify 的 LLM 層（最簡，gemini gateway）
 experiments/        實驗腳本（跑一次產數據，可拋棄）
-  NN_xxx.py         依序編號
+  NN_xxx.py         依序編號（12 為檢索品質回歸把關）
   results/          各實驗結果筆記（.md）
-tests/              pytest 單元測試
+tests/              pytest 單元測試（92 passed）
 data/               原始與處理產物（gitignore，不進版控）
 mock/               前端 mock 資料
 docs/               設計文件
+Dockerfile          生產映像（uv + FastAPI，索引走 volume）
+docker-compose.yml  部署編排（api + 選用 nginx）
+.github/workflows/ci.yml  CI（lint-test + docker-build）
 ```
 
 ### 實驗階段執行
