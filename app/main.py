@@ -67,6 +67,20 @@ def get_searcher() -> Searcher:
     return _searcher
 
 
+def _pair_articles(arts_str: str) -> list[str]:
+    """metadata 的 "法名 條號 法名 條號" 還原為 ["法名 條號", ...]。"""
+    toks = arts_str.split() if arts_str else []
+    out, i = [], 0
+    while i < len(toks) - 1:
+        law, num = toks[i], toks[i + 1]
+        if any(c.isdigit() for c in num):
+            out.append(f"{law} {num}")
+            i += 2
+        else:
+            i += 1
+    return out
+
+
 @app.get("/api/v1/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     """健康檢查 + 索引是否就緒。"""
@@ -110,7 +124,7 @@ def search(req: SearchRequest):
             title=r["title"],
             court=r["court"],
             year=str(r["jyear"]),
-            articles=r["articles"].split() if r["articles"] else [],
+            articles=_pair_articles(r["articles"]),
             kind=r["kind"],
             score=r["score"],
         )
