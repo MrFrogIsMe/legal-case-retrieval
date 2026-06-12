@@ -15,7 +15,8 @@ __pycache__
 .env.*
 
 # 資料與索引（走 volume 掛載，不打進 image）
-data/
+# 注意：用 /data/ 錨定根目錄，避免誤排 app/data/（含 legal_terms.json 需進 image）
+/data/
 *.chroma/
 chroma_db/
 experiments/results/*.jsonl
