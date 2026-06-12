@@ -143,7 +143,7 @@ _VERDICT_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("無罪",     re.compile(r"無罪")),
     ("免刑",     re.compile(r"免除其刑|免刑")),
     ("緩刑",     re.compile(r"緩刑\s*\d+\s*年|緩刑")),
-    ("有罪",     re.compile(r"處有期徒刑|處拘役|處罰金|論罪科刑")),
+    ("有罪",     re.compile(r"處有期徒刑|處拘役|處罰金|論罪科刑|處罰鍰|沒入")),
     ("駁回",     re.compile(r"駁回")),
     ("和解",     re.compile(r"成立和解|調解成立")),
 ]
