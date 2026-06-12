@@ -502,6 +502,22 @@ wheels = [
 ]
 
 [[package]]
+name = "fastapi"
+version = "0.136.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "annotated-doc" },
+    { name = "pydantic" },
+    { name = "starlette" },
+    { name = "typing-extensions" },
+    { name = "typing-inspection" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/81/2d/ff8d91d7b564d464629a0fd50a4489c97fcb836ac230bf3a7269232a9b1f/fastapi-0.136.3.tar.gz", hash = "sha256:e487fae93ad408e6f47641ee4dfe389864fd7bec92e547ea8498fc13f43e83ab", size = 396410, upload-time = "2026-05-23T18:53:15.192Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e0/82/45359b62a067409bd929ae8a56b8ed13e5a8c8a61194b3c236920999ab83/fastapi-0.136.3-py3-none-any.whl", hash = "sha256:3d2a69bdf04b7e9f3afa292c3bc7a98816bbfafa10bc9b45f3f3700d2f761620", size = 117481, upload-time = "2026-05-23T18:53:16.924Z" },
+]
+
+[[package]]
 name = "filelock"
 version = "3.29.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1096,7 +1112,12 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+api = [
+    { name = "fastapi" },
+    { name = "uvicorn" },
+]
 dev = [
+    { name = "httpx" },
     { name = "pytest" },
     { name = "ruff" },
 ]
@@ -1119,7 +1140,9 @@ requires-dist = [
     { name = "accelerate", marker = "extra == 'extract'", specifier = ">=0.30" },
     { name = "bm25s", marker = "extra == 'retrieval'", specifier = ">=0.2" },
     { name = "chromadb", marker = "extra == 'retrieval'", specifier = ">=0.5" },
+    { name = "fastapi", marker = "extra == 'api'", specifier = ">=0.115" },
     { name = "flagembedding", marker = "extra == 'retrieval'", specifier = "==1.3.4" },
+    { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.27" },
     { name = "openai", specifier = ">=2.41.0" },
     { name = "openai", marker = "extra == 'extract'", specifier = ">=2.0" },
     { name = "pydantic", specifier = ">=2.7" },
@@ -1130,8 +1153,9 @@ requires-dist = [
     { name = "torchvision", marker = "extra == 'retrieval'", specifier = "==0.19.1", index = "https://download.pytorch.org/whl/cu121" },
     { name = "transformers", marker = "extra == 'extract'", specifier = "==4.49.0" },
     { name = "transformers", marker = "extra == 'retrieval'", specifier = "==4.49.0" },
+    { name = "uvicorn", marker = "extra == 'api'", specifier = ">=0.30" },
 ]
-provides-extras = ["retrieval", "dev", "extract"]
+provides-extras = ["retrieval", "dev", "extract", "api"]
 
 [[package]]
 name = "lxml"
@@ -3115,6 +3139,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/47/2c/0a5f6f8ee0d5589e48c7640213ed5175d52cf540a06725b628cc1a45d6ce/soupsieve-2.8.4.tar.gz", hash = "sha256:e121fd02e975c695e4e9e8774a5ee35d74714b59307868dcc5319ad2d9e3328e", size = 121110, upload-time = "2026-05-24T13:55:57.154Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5e/f5/0c41cb68dcae6b7de4fac4188a3a9589e21fb31df21ea3a2e888db95e6c9/soupsieve-2.8.4-py3-none-any.whl", hash = "sha256:e7e6b0769c8f51ed59acab6e994b00621096cfb1c640a7509295987388fbaf65", size = 37304, upload-time = "2026-05-24T13:55:55.406Z" },
+]
+
+[[package]]
+name = "starlette"
+version = "1.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c1/37/cc24e33974e1439cf5ca62b0735b63026eabb768f472d8775f52d5851ed9/starlette-1.3.0.tar.gz", hash = "sha256:bb58cbb7a699da4ee4be9ed4cdfe4bc5b0390aa6dac1d1ac714ebebe8dc3c8df", size = 2702493, upload-time = "2026-06-11T06:27:41.869Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/16/42/56d31c5ee52dab0ad893d67d4f9c00f5ba2b4c5d87f392eca2c3fdce01cf/starlette-1.3.0-py3-none-any.whl", hash = "sha256:ff4ca1bc23de6a45cdfbbeb9b3caaea524c9221cdd8a6684ad7a4f651a83890b", size = 73492, upload-time = "2026-06-11T06:27:40.444Z" },
 ]
 
 [[package]]

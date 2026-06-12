@@ -169,6 +169,65 @@ class Searcher:
         ranked = sorted(zip(cand_jids, scores), key=lambda x: -x[1])
         return ranked[:top_k]
 
+    def search_pipeline(
+        self,
+        query_text: str,
+        top_k: int = 5,
+        candidate_n: int = 20,
+        rewrite: bool = True,
+        kind_filter: Literal["criminal", "civil", "both"] = "criminal",
+    ) -> list[dict]:
+        """線上查詢主管線（實驗最佳組合：query 改寫 + hybrid + rerank）。
+
+        依實驗 11 結論：rewrite + hybrid_rerank 在「類案檢索」尺規下達 R@5 0.933。
+
+        Args:
+            query_text: 使用者口語事由
+            top_k: 回傳案例數
+            candidate_n: rerank 前的候選池大小
+            rewrite: 是否先用 LLM 把口語改寫成法律事實描述（提升召回，但增延遲）
+            kind_filter: 案件類型過濾（純刑事範圍預設 criminal）
+
+        Returns:
+            list[dict]：每筆含 jid/title/court/jyear/articles/score，已依相關性排序。
+        """
+        # 1. query 改寫（口語 → 法律事實描述），失敗則退回原 query
+        search_q = query_text
+        if rewrite:
+            try:
+                from lcr.eval.hyde import rewrite as _rewrite
+                rewritten = _rewrite(query_text)
+                if rewritten:
+                    search_q = rewritten
+            except Exception:
+                search_q = query_text  # 改寫失敗不阻斷檢索
+
+        # 2. hybrid 召回 + rerank 精排
+        ranked = self.hybrid_rerank(
+            search_q, top_k=top_k, candidate_n=candidate_n, kind_filter=kind_filter
+        )
+        if not ranked:
+            return []
+
+        # 3. 補 metadata（title/court/jyear/articles）供前端顯示
+        jids = [jid for jid, _ in ranked]
+        got = self.chroma_collection.get(ids=jids, include=["metadatas"])
+        meta_map = {m["jid"]: m for m in got["metadatas"]}
+
+        results: list[dict] = []
+        for jid, score in ranked:
+            m = meta_map.get(jid, {})
+            results.append({
+                "jid": jid,
+                "title": m.get("title", ""),
+                "court": m.get("court", ""),
+                "jyear": m.get("jyear", ""),
+                "articles": m.get("articles", ""),
+                "kind": m.get("kind", "criminal"),
+                "score": round(float(score), 4),
+            })
+        return results
+
 
 def rrf_fusion(
     dense_results: list[tuple[str, float]],
