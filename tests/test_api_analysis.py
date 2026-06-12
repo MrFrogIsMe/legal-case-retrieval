@@ -24,6 +24,28 @@ def test_infer_articles_dedup():
     assert codes.count("刑法 284") == 1
 
 
+def test_infer_articles_filters_procedural_law():
+    # 資料驅動 top_articles 常含刑訴等程序法，應過濾掉只留實體法條
+    arts = A.infer_articles("我開車不小心撞傷人")
+    codes = [a["code"] for a in arts]
+    assert all("刑事訴訟法" not in c and "民事訴訟法" not in c for c in codes)
+
+
+def test_infer_articles_normalizes_law_name():
+    # 「中華民國刑法 X」與「刑法 X」視為同條，不應同時出現
+    arts = A.infer_articles("我被詐騙了")
+    codes = [a["code"] for a in arts]
+    assert "中華民國刑法 339" not in codes  # 已正規化為「刑法 339」
+    assert codes.count("刑法 339") <= 1
+
+
+def test_infer_articles_fallback_when_no_terms(monkeypatch):
+    # 術語表缺檔（zero-data）時退回內建白名單
+    monkeypatch.setattr(A, "_load_terms", lambda: {})
+    arts = A.infer_articles("我朋友酒駕被抓")
+    assert "刑法 185-3" in [a["code"] for a in arts]
+
+
 def test_build_analysis_uses_top_title():
     cases = [{"title": "過失傷害"}, {"title": "過失傷害"}, {"title": "毀損"}]
     out = A.build_analysis("我開車不小心撞傷人", cases)
@@ -70,6 +92,14 @@ def test_ground_citations_verdict_label_not_literal_but_regex_matches():
     verdict_cite = [c for c in cites if c["article"] is None][0]
     assert verdict_cite["verified"] is True
     assert verdict_cite["source_segment"] == "main"
+
+
+def test_ground_citations_verdict_fahuan_now_verified():
+    # 社會秩序維護法「罰鍰」型主文現在可被 regex 互證（grounding 強化）
+    segments = {"main": "李某、王某互相鬥毆，各處罰鍰新臺幣參仟元。", "facts": "", "reasoning": ""}
+    cites = A.ground_citations(segments, {"verdict": "有罪"}, [])
+    verdict_cite = [c for c in cites if c["article"] is None][0]
+    assert verdict_cite["verified"] is True
 
 
 def test_ground_citations_verdict_mismatch_unverified():

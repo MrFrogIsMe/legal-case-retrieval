@@ -87,6 +87,7 @@ app/                FastAPI 後端（工程階段）
   schemas.py        pydantic 請求/回應契約
   analysis.py       業務純函式（法條推斷、citation grounding、對比、trace、clarify 規則）
   clarify.py        clarify 的 LLM 層（最簡，gemini gateway）
+  data/legal_terms.json  案由→法條→特徵詞術語表（資料驅動法條推斷，隨碼進 image）
 experiments/        實驗腳本（跑一次產數據，可拋棄）
   NN_xxx.py         依序編號（12 為檢索品質回歸把關）
   results/          各實驗結果筆記（.md）

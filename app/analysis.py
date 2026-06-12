@@ -14,57 +14,87 @@
 
 from __future__ import annotations
 
-# ---------------------------------------------------------------------------
-# 法條知識（白名單，對齊 regex_extractor 的法律名；用於 analysis 註記）
-# ---------------------------------------------------------------------------
+import json
+from functools import lru_cache
+from pathlib import Path
 
-# 案由關鍵詞 → 可能法條（code/name/note）。資料驅動的精細版可改讀 legal_terms.json，
-# 這裡放最常見的刑事類型做 zero-dependency 推斷。
-_ARTICLE_HINTS: list[tuple[tuple[str, ...], list[dict]]] = [
-    (
-        ("酒駕", "酒後駕車", "酒後", "喝酒", "喝了酒", "飲酒", "不能安全駕駛",
-         "吐氣", "酒精濃度"),
-        [{"code": "刑法 185-3", "name": "不能安全駕駛罪",
-          "note": "公共危險，吐氣酒精濃度達每公升0.25毫克以上即成立"}],
-    ),
-    (
-        ("肇事逃逸", "逃逸", "肇逃"),
-        [{"code": "刑法 185-4", "name": "肇事逃逸罪",
-          "note": "駕駛動力交通工具發生事故致人傷亡而逃逸"}],
-    ),
-    (
-        ("過失傷害", "撞傷", "受傷", "車禍"),
-        [{"code": "刑法 284", "name": "過失傷害罪", "note": "告訴乃論，撤回告訴可不受理"}],
-    ),
-    (
-        ("過失致死", "致死", "死亡"),
-        [{"code": "刑法 276", "name": "過失致死罪", "note": "非告訴乃論"}],
-    ),
-    (
-        ("毀損", "弄壞", "砸", "破壞"),
-        [{"code": "刑法 354", "name": "毀損罪", "note": "須故意，過失毀損不罰"}],
-    ),
-    (
-        ("竊盜", "偷", "行竊"),
-        [{"code": "刑法 320", "name": "竊盜罪", "note": "意圖為自己或第三人不法所有"}],
-    ),
-    (
-        ("詐欺", "詐騙", "騙"),
-        [{"code": "刑法 339", "name": "詐欺罪", "note": "以詐術使人陷於錯誤而交付財物"}],
-    ),
-    (
-        ("傷害", "毆打", "打人", "鬥毆"),
-        [{"code": "刑法 277", "name": "傷害罪", "note": "告訴乃論"}],
-    ),
-    (
-        ("毒品", "施用", "持有毒品"),
-        [{"code": "毒品危害防制條例 10", "name": "施用毒品罪", "note": "依毒品分級量刑"}],
-    ),
+# ---------------------------------------------------------------------------
+# 法條知識
+# ---------------------------------------------------------------------------
+#
+# 法條推斷採「資料驅動為主、內建白名單為輔」：
+#   1. 主來源：app/data/legal_terms.json（experiments/09 從 81k 判決抽出的
+#      案由→top_articles→top_terms 術語表）。用 top_terms 命中案由 → 回該案由
+#      高頻法條（資料驅動，反映真實判決分布）。
+#   2. 退路：命不中術語表（或檔案缺）時退回 _FALLBACK_HINTS（手寫最小白名單），
+#      確保無資料環境（CI / 本機測試）仍可推斷、且不需外部檔。
+#
+# 法條 code 的可讀名稱/註記由 _ARTICLE_META 補（術語表只有 code）。
+
+_TERMS_PATH = Path(__file__).resolve().parent / "data" / "legal_terms.json"
+
+# 常見法條 code → (name, note)，給資料驅動結果補可讀說明（找不到則留空）
+_ARTICLE_META: dict[str, tuple[str, str]] = {
+    "刑法 185-3": ("不能安全駕駛罪", "公共危險，吐氣酒精濃度達每公升0.25毫克以上即成立"),
+    "刑法 185-4": ("肇事逃逸罪", "駕駛動力交通工具發生事故致人傷亡而逃逸"),
+    "刑法 284": ("過失傷害罪", "告訴乃論，撤回告訴可不受理"),
+    "刑法 276": ("過失致死罪", "非告訴乃論"),
+    "刑法 277": ("傷害罪", "告訴乃論"),
+    "刑法 354": ("毀損罪", "須故意，過失毀損不罰"),
+    "刑法 320": ("竊盜罪", "意圖為自己或第三人不法所有"),
+    "刑法 339": ("詐欺罪", "以詐術使人陷於錯誤而交付財物"),
+    "毒品危害防制條例 10": ("施用毒品罪", "依毒品分級量刑"),
+    "社會秩序維護法 87": ("妨害安寧秩序", "互相鬥毆等，處罰鍰"),
+    "社會秩序維護法 45": ("裁處程序", "由簡易庭裁定"),
+}
+
+# 退路白名單：關鍵詞 → 法條 code（命不中術語表時用，zero-data fallback）
+_FALLBACK_HINTS: list[tuple[tuple[str, ...], tuple[str, ...]]] = [
+    (("酒駕", "酒後駕車", "酒後", "喝酒", "喝了酒", "飲酒", "不能安全駕駛",
+      "吐氣", "酒精濃度"), ("刑法 185-3",)),
+    (("肇事逃逸", "肇逃"), ("刑法 185-4",)),
+    (("過失傷害", "撞傷", "受傷", "車禍"), ("刑法 284",)),
+    (("過失致死", "致死", "死亡"), ("刑法 276",)),
+    (("毀損", "弄壞", "砸", "破壞"), ("刑法 354",)),
+    (("竊盜", "偷", "行竊"), ("刑法 320",)),
+    (("詐欺", "詐騙", "騙"), ("刑法 339",)),
+    (("傷害", "毆打", "打人", "鬥毆"), ("刑法 277",)),
+    (("毒品", "施用", "持有毒品"), ("毒品危害防制條例 10",)),
 ]
 
 # 主觀要素關鍵詞
 _INTENT_HINTS = ("故意", "蓄意", "明知", "基於")
 _NEGLIGENCE_HINTS = ("過失", "不慎", "不小心", "未注意", "疏忽")
+
+# 程序法（非實體罪名，對使用者無意義，從 analysis 法條建議中過濾）
+_PROC_LAWS = ("刑事訴訟法", "民事訴訟法", "行政罰法")
+
+
+def _is_substantive(code: str) -> bool:
+    """是否為實體法條（排除刑訴/民訴等程序法）。"""
+    return not any(p in code for p in _PROC_LAWS)
+
+
+@lru_cache(maxsize=1)
+def _load_terms() -> dict:
+    """載入資料驅動術語表（案由→top_articles/top_terms）。缺檔則回空 dict。"""
+    if _TERMS_PATH.exists():
+        try:
+            return json.loads(_TERMS_PATH.read_text(encoding="utf-8"))
+        except Exception:  # noqa: BLE001  壞檔不阻斷，退回 fallback
+            return {}
+    return {}
+
+
+def _article_dict(code: str) -> dict:
+    """法條 code → {code, name, note}（name/note 取自 _ARTICLE_META）。"""
+    name, note = _ARTICLE_META.get(code, ("", ""))
+    return {"code": code, "name": name, "note": note}
+
+
+def _norm_code(code: str) -> str:
+    """正規化法條 code 供去重：「中華民國刑法 339」與「刑法 339」視為同條。"""
+    return code.replace("中華民國刑法", "刑法").strip()
 
 
 def infer_subjective(query: str) -> str:
@@ -76,16 +106,53 @@ def infer_subjective(query: str) -> str:
     return "不確定"
 
 
-def infer_articles(query: str) -> list[dict]:
-    """從口語事由比對可能法條（去重，保序）。"""
+def _match_case_type(query: str) -> tuple[str, dict] | tuple[None, None]:
+    """用術語表 top_terms + 案由名比對 query，回最佳命中案由與其資料。
+
+    純字串比對（不呼叫 LLM）；命中數相同時取資料筆數（count）較多者。
+    """
+    terms = _load_terms()
+    best, best_hit, best_count = None, 0, 0
+    for title, info in terms.items():
+        hit = sum(1 for t in info.get("top_terms", []) if t and t in query)
+        if any(c in query for c in title):
+            hit += 1
+        cnt = info.get("count", 0)
+        if hit > best_hit or (hit == best_hit and hit > 0 and cnt > best_count):
+            best, best_hit, best_count = title, hit, cnt
+    if best and best_hit > 0:
+        return best, terms[best]
+    return None, None
+
+
+def infer_articles(query: str, top_n: int = 3) -> list[dict]:
+    """從口語事由推斷可能法條（資料驅動為主，白名單為輔）。
+
+    1. 術語表命中案由 → 取該案由 top_articles 前 top_n（資料驅動）。
+    2. 命不中 → 退回 _FALLBACK_HINTS 關鍵詞比對。
+    回 [{code, name, note}, ...]，去重保序。
+    """
     out: list[dict] = []
     seen: set[str] = set()
-    for keywords, arts in _ARTICLE_HINTS:
-        if any(k in query for k in keywords):
-            for a in arts:
-                if a["code"] not in seen:
-                    out.append(a)
-                    seen.add(a["code"])
+
+    _title, info = _match_case_type(query)
+    if info:
+        for code in info.get("top_articles", []):
+            norm = _norm_code(code)
+            if code and _is_substantive(code) and norm not in seen:
+                out.append(_article_dict(norm))
+                seen.add(norm)
+            if len(out) >= top_n:
+                break
+
+    if not out:  # 退路：白名單關鍵詞
+        for keywords, codes in _FALLBACK_HINTS:
+            if any(k in query for k in keywords):
+                for code in codes:
+                    norm = _norm_code(code)
+                    if norm not in seen:
+                        out.append(_article_dict(norm))
+                        seen.add(norm)
     return out
 
 

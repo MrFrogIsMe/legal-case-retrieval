@@ -100,6 +100,10 @@ def test_extract_verdict_huan_xing():
 def test_extract_verdict_you_zui():
     assert extract_verdict("論罪科刑如主文。") == "有罪"
 
+def test_extract_verdict_fa_huan():
+    # 社會秩序維護法「罰鍰」型主文也應判為有罪（grounding 互證用）
+    assert extract_verdict("各處罰鍰新臺幣參仟元。") == "有罪"
+
 def test_extract_verdict_wu_zui():
     assert extract_verdict("無罪。") == "無罪"
 

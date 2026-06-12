@@ -391,7 +391,11 @@ case 物件欄位：
   此策略不必重建索引即可補齊所有端點（最小改動）。
 - `/case` 的 `cited_articles` 由 regex 從原文精確抽；citation grounding 對 verdict
   採「regex 從主文段獨立重判，與 LLM 標籤一致才標 verified」的交叉驗證。
-  限制：社會秩序維護法「罰鍰」型主文目前 regex 未涵蓋，該類 verdict 不互證（誠實揭露）。
+  `extract_verdict` 已涵蓋徒刑/拘役/罰金/罰鍰/沒入，含社會秩序維護法「罰鍰」型主文。
+- `/search` 的 analysis 法條建議為**資料驅動**：讀 `app/data/legal_terms.json`
+  （experiments/09 從 81k 判決抽出的案由→top_articles），用 top_terms 命中案由後
+  回該案由高頻**實體**法條（過濾刑訴等程序法、正規化法名去重）；命不中或無檔
+  退回內建最小白名單（zero-data fallback，CI/測試可跑）。
 - `/clarify` 規則層先判已蒐集要件與缺漏；缺要件時呼叫一次 LLM 產生自然追問句
   （gemini gateway，失敗退回固定句），要件足夠則直接 ready_to_search。
 - `/search/trace` 為反映真實管線的結構化步驟模板（非每次呼叫 LLM）。

@@ -112,16 +112,19 @@
 ### 4.2 部署 — ✅ 已就緒（feat/api-endpoints-v1）
 Dockerfile / docker-compose.yml / .dockerignore / CI（ci.yml）/ 檢索回歸（exp 12）皆完成。
 剩餘可選項：
-- nginx 反代設定檔（compose 已留註解位，需補 `deploy/nginx.conf`）
+- ✅ nginx 反代設定檔（`deploy/nginx.conf`，compose 已啟用 nginx 服務）
 - self-hosted GPU runner 上把 exp 12 接進 CI（GitHub 雲端 runner 無 GPU，目前手動跑）
-- docker build 實機驗證（本機/CI 尚未實跑 build；torch 層大，建議 home_wsl 驗證）
+- docker build 實機驗證：CI docker-build job 已實證可成功建 image（含 torch cu121，約 15 分）
 
-### 4.3 可選的研究增強（尚未做）
-- HyDE 策略 C：案由預判改用 dense top-1（現用字串比對會猜錯）
-- 要素抽取可信度實驗（roadmap Week 3）：純 LLM vs LLM+規則 準確率/幻覺率
-- citation grounding 強化：社會秩序維護法「罰鍰」型 verdict 目前 regex 未涵蓋，未互證
-- analysis 法條 hint 表改資料驅動（讀 legal_terms.json）取代目前手寫白名單
-- 整合 `docs/experiment_results.md`（roadmap Week 4 報告）
+### 4.3 可選的研究增強
+- ✅ analysis 法條 hint 改資料驅動：讀 `app/data/legal_terms.json`（81k 判決抽出的
+  案由→top_articles），命中案由回高頻實體法條（過濾程序法、正規化法名）；
+  命不中或無檔退回內建白名單（zero-data fallback）
+- ✅ citation grounding 強化：`extract_verdict` 認得「罰鍰/沒入」，社會秩序維護法
+  「罰鍰」型 verdict 現可被 regex 互證
+- HyDE 策略 C（尚未做）：案由預判改用 dense top-1（現用字串比對會猜錯）
+- 要素抽取可信度實驗（尚未做，roadmap Week 3）：純 LLM vs LLM+規則 準確率/幻覺率
+- 整合 `docs/experiment_results.md`（尚未做，roadmap Week 4 報告）
 
 ### 4.4 拆前後端 repo（roadmap 第 1 節，尚未做）
 - API 已穩定，前端可拆到 legal-case-web，本 repo 專注後端
